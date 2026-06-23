@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FirmaDoc — Expotuna</title>
+<title>FirmaDoc — Alimentos San Mateo</title>
 <script>
 /* MSAL Browser v3.27.0 — incrustado localmente para compatibilidad con SharePoint */
 /*! @azure/msal-browser v3.27.0 2024-11-05 */
@@ -282,14 +282,14 @@ input[type=range]{width:75px;accent-color:var(--blue)}
   <div class="lcard">
     <div class="logo">📄</div>
     <h1>FirmaDoc</h1>
-    <p class="sub">Expotuna · Gestión Documental<br>Inicia sesión con tu cuenta corporativa de Microsoft 365</p>
+    <p class="sub">Alimentos San Mateo · Gestión Documental<br>Inicia sesión con tu cuenta corporativa de Microsoft 365</p>
     <button class="btn-ms" id="btnLogin" onclick="doLogin()">
       <svg width="20" height="20" viewBox="0 0 21 21"><rect x="0" y="0" width="10" height="10" fill="#F25022"/><rect x="11" y="0" width="10" height="10" fill="#7FBA00"/><rect x="0" y="11" width="10" height="10" fill="#00A4EF"/><rect x="11" y="11" width="10" height="10" fill="#FFB900"/></svg>
       Iniciar sesión con Microsoft
     </button>
     <div class="lerr" id="lerr"></div>
     <p class="linfo" id="linfo" style="display:none">⏳ Verificando acceso...</p>
-    <p class="linfo" style="margin-top:14px">Solo usuarios con cuenta activa de Expotuna pueden acceder.</p>
+    <p class="linfo" style="margin-top:14px">Solo usuarios con cuenta activa de Alimentos San Mateo pueden acceder.</p>
   </div>
 </div>
 
@@ -308,7 +308,7 @@ input[type=range]{width:75px;accent-color:var(--blue)}
   <div class="topbar">
     <div class="tb-brand">
       <span style="font-size:17px">📄</span>
-      <h1>FirmaDoc <span>Expotuna</span></h1>
+      <h1>FirmaDoc <span>Alimentos San Mateo</span></h1>
     </div>
     <div class="tb-right">
       <div class="user-chip">
@@ -517,7 +517,7 @@ const CFG = {
   clientId:  '804d6d3d-4109-48bf-84fd-eb26d4508947',
   tenantId:  'b8235890-1a0b-4f78-87aa-6631aeef75a8',
   spSiteUrl: 'https://alimesa.sharepoint.com/sites/SistemaDocumental-AlimentosSanMateo',
-  redirectUri: 'https://alimesa.sharepoint.com/sites/SistemaDocumental-AlimentosSanMateo/Procesos%20-%20Sistemas/Herramienta%20-%20Firma'
+  redirectUri: 'https://procesossm.github.io/SMFirmaDoc/'
 };
 // ═══════════════════════════════════════════════════════════════════
 
@@ -1023,7 +1023,7 @@ async function signPdfImg(bytes,url,n,r,incTs,ts){
 async function signDocxImg(bytes,n,r,ts){
   if(!window.JSZip)await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s)});
   const zip=await JSZip.loadAsync(bytes);
-  zip.file('firma_expotuna.txt',`Firmado por: ${n||'—'}\nCargo: ${r||'—'}\nFecha: ${ts}`);
+  zip.file('firma_sanmateo.txt',`Firmado por: ${n||'—'}\nCargo: ${r||'—'}\nFecha: ${ts}`);
   return await zip.generateAsync({type:'uint8array'});
 }
 
