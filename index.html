@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>SanMateo eSign — Alimentos San Mateo</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%232563eb'/><text y='.9em' font-size='72' x='12'>📝</text></svg>">
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAUBJREFUOI1jTDly7v/vH78YcIFF73/ilPsvwMvA8vvHL4ZNxZNwK3r/AaccY285AxNOWSIBQQOEPawZuDWUyDNATEOe4UO4N8P/smQGVn5e0gwQ01BgsMoMYvjLwMDAf/4Kw++Pn4k3AKI5kIGZhZlB8uwlhueTl+N0JQs+zRdX72N4vn4fTs0YBjAyMjJYpvkzMLMwM1xYtY/h7sFzeDVjGMAlxMfw6tYjhidnbzA8Pn0dLi7RnMPwWVqC4UdOK8Pfb99RDEAJg69vPzIcn7EeRTObuBDDSxkphj+MjAyCXUUMPNrKDEzsbNhd4FQWw8AtJohiwyomDgbO//8ZfjEyMPxiZ2fgTgpi+D9rNcPXmw8wDdjXtQTDjz/ef2BgYGJiYGJlYfj08xfDJzR54pLyv38M/35iz3AU5wVGSrMzAGGsa4XEZGu8AAAAAElFTkSuQmCC">
 <script>
 /* MSAL Browser v3.27.0 — incrustado localmente para compatibilidad con SharePoint */
 /*! @azure/msal-browser v3.27.0 2024-11-05 */
@@ -338,7 +338,7 @@ input[type=range]{width:70px;accent-color:var(--blue)}
       <hr style="border:none;border-top:1px solid var(--g200);margin:0 0 14px">
       <p style="font-size:13px;color:var(--g600);line-height:1.6">Plataforma de firma digital de documentos.<br>Accede con tu cuenta corporativa de Microsoft 365.</p>
     </div>
-    <button class="btn-ms" id="btnLogin" onclick="doLogin()">
+    <button class="btn-ms" id="btnLogin" onclick="doLogin()" disabled>
       <svg width="20" height="20" viewBox="0 0 21 21" style="flex-shrink:0">
         <rect x="0" y="0" width="10" height="10" fill="#F25022"/>
         <rect x="11" y="0" width="10" height="10" fill="#7FBA00"/>
@@ -617,7 +617,7 @@ let activeDrag=null, activeResize=null;
   try{
     msalApp = new msal.PublicClientApplication({
       auth:{clientId:CFG.clientId, authority:'https://login.microsoftonline.com/'+CFG.tenantId, redirectUri:CFG.redirectUri},
-      cache:{cacheLocation:'sessionStorage', storeAuthStateInCookie:false}
+      cache:{cacheLocation:'localStorage', storeAuthStateInCookie:false}
     });
     init();
   }catch(e){
@@ -629,45 +629,101 @@ let activeDrag=null, activeResize=null;
 
 async function init(){
   await msalApp.initialize();
+  document.getElementById('btnLogin').disabled=true;
+  document.getElementById('lspinner').style.display='block';
+  document.getElementById('lspinner').textContent='⏳ Verificando sesión...';
   try{
     const r=await msalApp.handleRedirectPromise();
     if(r){await afterLogin(r.account);return}
     const accs=msalApp.getAllAccounts();
     if(accs.length){
-      try{const t=await msalApp.acquireTokenSilent({scopes:SCOPES,account:accs[0]});await afterLogin(t.account)}
-      catch{showLogin()}
-    }else showLogin();
-  }catch(e){showErr(e.message);showLogin()}
+      try{
+        const t=await msalApp.acquireTokenSilent({scopes:SCOPES,account:accs[0]});
+        await afterLogin(t.account);
+        return;
+      }catch{/* token expirado, pedir login manual */}
+    }
+    enableLogin();
+  }catch(e){
+    showErr(e.message);
+    enableLogin();
+  }
 }
-function showLogin(){document.getElementById('loginScreen').style.display='flex';document.getElementById('app').style.display='none'}
+
+function enableLogin(){
+  document.getElementById('lspinner').style.display='none';
+  document.getElementById('btnLogin').disabled=false;
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('app').style.display='none';
+}
+
+function showLogin(){
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('app').style.display='none';
+}
+
 async function doLogin(){
   if(!msalApp){showErr('Autenticación no lista. Recarga la página.');return}
   document.getElementById('btnLogin').disabled=true;
   document.getElementById('lspinner').style.display='block';
+  document.getElementById('lspinner').textContent='⏳ Redirigiendo a Microsoft...';
   document.getElementById('lerr').style.display='none';
   try{await msalApp.loginRedirect({scopes:SCOPES})}
-  catch(e){showErr(e.message);document.getElementById('btnLogin').disabled=false;document.getElementById('lspinner').style.display='none'}
+  catch(e){
+    showErr(e.message);
+    document.getElementById('btnLogin').disabled=false;
+    document.getElementById('lspinner').style.display='none';
+  }
 }
-function doLogout(){if(msalApp)msalApp.logoutRedirect()}
+function doLogout(){
+  localStorage.removeItem('sm_esign_account');
+  if(msalApp)msalApp.logoutRedirect();
+}
 
 async function afterLogin(account){
+  document.getElementById('btnLogin').disabled=true;
   document.getElementById('lspinner').style.display='block';
+  document.getElementById('lspinner').textContent='⏳ Cargando permisos...';
   try{
     const t=await msalApp.acquireTokenSilent({scopes:SCOPES,account});
     spToken=t.accessToken;
+
     // Obtener site ID
     const hp=CFG.spSiteUrl.replace('https://','').split('/');
     const sr=await fetch(`https://graph.microsoft.com/v1.0/sites/${hp[0]}:/${hp.slice(1).join('/')}`,{headers:{Authorization:`Bearer ${spToken}`}});
     if(!sr.ok)throw new Error('No se pudo acceder al sitio de SharePoint.');
     const sd=await sr.json();
     siteId=sd.id;
-    // Obtener drives — solo los que el usuario puede leer
+
+    // ── CORRECCIÓN: obtener drives con permisos reales del usuario ──
+    // Primero obtenemos todas las drives del sitio
     const dr=await fetch(`https://graph.microsoft.com/v1.0/sites/${siteId}/drives`,{headers:{Authorization:`Bearer ${spToken}`}});
-    if(!dr.ok)throw new Error('Sin acceso a las bibliotecas del sitio.');
+    if(!dr.ok)throw new Error('Sin acceso al sitio.');
     const dd=await dr.json();
+    const allDrives=dd.value||[];
+
+    // Luego filtramos probando acceso real a cada drive con el token del usuario
     drives={};
-    (dd.value||[]).forEach(d=>drives[d.name]=d.id);
-    if(!Object.keys(drives).length){showDenied(`Sin acceso a ninguna biblioteca para ${account.name}.`);return}
+    await Promise.all(allDrives.map(async(d)=>{
+      try{
+        // Intentar leer el root de la drive — si el usuario no tiene permiso, dará 403/401
+        const tr=await fetch(`https://graph.microsoft.com/v1.0/drives/${d.id}/root`,{
+          headers:{Authorization:`Bearer ${spToken}`}
+        });
+        if(tr.ok) drives[d.name]=d.id;
+      }catch{/* sin acceso, ignorar */}
+    }));
+
+    if(!Object.keys(drives).length){showDenied(`Tu cuenta ${account.username} no tiene acceso a ninguna biblioteca en este sitio.`);return}
+
+    // ── Sesión compartida entre pestañas via localStorage ──
+    localStorage.setItem('sm_esign_account', JSON.stringify({
+      homeAccountId: account.homeAccountId,
+      username: account.username,
+      name: account.name,
+      tenantId: account.tenantId
+    }));
+
     // Mostrar app
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('app').style.display='flex';
@@ -676,22 +732,34 @@ async function afterLogin(account){
     document.getElementById('uName').textContent=account.name;
     document.getElementById('sname').value=account.name;
     document.getElementById('spStTxt').textContent=account.name+' · '+account.username;
+
     // Poblar selector de bibliotecas
     const sel=document.getElementById('driveSelect');
     sel.innerHTML='<option value="">— Selecciona una biblioteca —</option>';
-    Object.keys(drives).forEach(name=>{
+    Object.keys(drives).sort().forEach(name=>{
       const opt=document.createElement('option');
       opt.value=drives[name];opt.textContent='📚 '+name;
       sel.appendChild(opt);
     });
-    document.getElementById('libNoteT').textContent=Object.keys(drives).length+' biblioteca(s) disponibles según tus permisos.';
-    addLog('✅ Sesión: '+account.name,'i');
+    document.getElementById('libNoteT').textContent=
+      Object.keys(drives).length+' biblioteca(s) disponibles según tus permisos en SharePoint.';
+    addLog('✅ Sesión: '+account.name+' ('+Object.keys(drives).length+' biblioteca(s))','i');
+
   }catch(e){
-    if(e.message&&e.message.includes('acceso'))showDenied(e.message);
-    else{showErr(e.message);document.getElementById('btnLogin').disabled=false;document.getElementById('lspinner').style.display='none'}
+    if(e.message&&(e.message.includes('acceso')||e.message.includes('biblioteca')))
+      showDenied(e.message);
+    else{
+      showErr(e.message);
+      document.getElementById('btnLogin').disabled=false;
+      document.getElementById('lspinner').style.display='none';
+    }
   }
 }
-function showDenied(msg){document.getElementById('loginScreen').style.display='none';document.getElementById('denied').style.display='flex';document.getElementById('deniedMsg').textContent=msg}
+function showDenied(msg){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('denied').style.display='flex';
+  document.getElementById('deniedMsg').textContent=msg;
+}
 function showErr(msg){const el=document.getElementById('lerr');el.textContent='Error: '+msg;el.style.display='block'}
 
 // ── NAVEGACIÓN ──────────────────────────────────────────────
