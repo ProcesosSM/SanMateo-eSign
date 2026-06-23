@@ -2,8 +2,9 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FirmaDoc — Alimentos San Mateo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SanMateo eSign — Alimentos San Mateo</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%232563eb'/><text y='.9em' font-size='72' x='12'>📝</text></svg>">
 <script>
 /* MSAL Browser v3.27.0 — incrustado localmente para compatibilidad con SharePoint */
 /*! @azure/msal-browser v3.27.0 2024-11-05 */
@@ -76,203 +77,253 @@ const ao="|";function so(e){const{skus:t,libraryName:r,libraryVersion:n,extensio
 
 </script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400&display=swap');
 :root{
-  --navy:#0f1b35;--blue:#2563eb;--blue-h:#1d4ed8;
-  --green:#059669;--gl:#d1fae5;--red:#dc2626;--rl:#fee2e2;
+  /* Paleta Alimentos San Mateo */
+  --brand-dark:#1A3E5C;    /* azul marino oscuro */
+  --brand-mid:#2E6F9E;     /* azul medio */
+  --brand-teal:#3BA8B8;    /* teal / turquesa */
+  --brand-bg:#F5F5F0;      /* fondo crema */
+  --brand-orange:#E8622A;  /* naranja acento */
+  --brand-text:#2B2B2B;    /* texto principal */
+  /* Derivados y complementarios */
+  --navy:#1A3E5C;--navy2:#163352;
+  --blue:#2E6F9E;--blue-h:#245d87;--blue-l:#e8f1f8;
+  --teal:#3BA8B8;--teal-l:#e6f6f8;
+  --orange:#E8622A;--orange-l:#fdf0eb;
+  --green:#2d8a5e;--gl:#d4f0e3;
+  --red:#c0392b;--rl:#fde8e6;
   --amber:#d97706;--al:#fef3c7;
-  --g50:#f8fafc;--g100:#f1f5f9;--g200:#e2e8f0;--g300:#cbd5e1;
-  --g400:#94a3b8;--g500:#64748b;--g600:#475569;--g700:#334155;--g900:#0f172a;
+  --g50:#F5F5F0;--g100:#ededea;--g200:#ddddd8;--g300:#c4c4be;
+  --g400:#9a9a94;--g500:#6e6e68;--g600:#4f4f4a;--g700:#363632;--g900:#2B2B2B;
+  --radius:12px;--sh:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:var(--g50);color:var(--g900);min-height:100vh;display:flex;flex-direction:column}
+html{height:100%}
+body{font-family:'Inter',sans-serif;background:var(--brand-bg);color:var(--brand-text);min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
 
-/* LOGIN */
-#loginScreen{position:fixed;inset:0;z-index:100;background:linear-gradient(135deg,#0f1b35 0%,#1a2d52 60%,#1e3a6e 100%);display:flex;align-items:center;justify-content:center}
-.lcard{background:#fff;border-radius:16px;padding:44px 40px;width:400px;max-width:94vw;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.35)}
-.lcard .logo{font-size:42px;margin-bottom:10px}
-.lcard h1{font-size:22px;font-weight:700;color:var(--navy);margin-bottom:4px}
-.lcard .sub{font-size:12px;color:var(--g500);margin-bottom:28px;line-height:1.5}
-.btn-ms{width:100%;padding:13px;border-radius:9px;border:1.5px solid var(--g300);background:#fff;color:var(--g700);font-size:14px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .15s}
-.btn-ms:hover{border-color:var(--blue);color:var(--blue);background:var(--g50)}
-.btn-ms:disabled{opacity:.5;cursor:not-allowed}
-.lerr{margin-top:12px;padding:9px 13px;background:var(--rl);color:var(--red);border-radius:8px;font-size:12px;display:none;text-align:left}
-.linfo{margin-top:10px;font-size:11px;color:var(--g400)}
+/* ═══ LOGIN ═══ */
+#loginScreen{
+  position:fixed;inset:0;z-index:200;
+  background:linear-gradient(145deg,#1A3E5C 0%,#163352 35%,#1f4d70 65%,#2E6F9E 100%);
+  display:flex;align-items:center;justify-content:center;padding:16px;
+}
+.lcard{
+  background:#fff;border-radius:20px;padding:48px 44px;width:100%;max-width:420px;
+  box-shadow:0 32px 80px rgba(0,0,0,.4);
+  display:flex;flex-direction:column;justify-content:center;
+}
+.lcard-logo{
+  display:flex;align-items:center;gap:12px;margin-bottom:28px;
+}
+.lcard-icon{
+  width:52px;height:52px;background:var(--blue);border-radius:14px;
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+  box-shadow:0 4px 14px rgba(37,99,235,.35);flex-shrink:0;
+}
+.lcard-brand h1{font-size:20px;font-weight:700;color:var(--navy);letter-spacing:-.5px}
+.lcard-brand p{font-size:11px;color:var(--g400);margin-top:2px;font-weight:500;letter-spacing:.04em;text-transform:uppercase}
+.lcard hr{border:none;border-top:1px solid var(--g200);margin:0 0 24px}
+.lcard-subtitle{font-size:13px;color:var(--g600);margin-bottom:20px;line-height:1.55}
+.btn-ms{
+  width:100%;padding:13px 16px;border-radius:10px;
+  border:none;background:var(--brand-dark);
+  color:#fff;font-size:14px;font-weight:500;font-family:'Inter',sans-serif;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:all .18s;box-shadow:0 2px 8px rgba(26,62,92,.35);
+}
+.btn-ms:hover{background:#163352;box-shadow:0 4px 14px rgba(26,62,92,.45);transform:translateY(-1px)}
+.btn-ms:active{transform:translateY(0)}
+.btn-ms:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.lerr{margin-top:12px;padding:10px 13px;background:var(--rl);color:var(--red);border-radius:8px;font-size:12px;display:none;line-height:1.5}
+.lspinner{margin-top:10px;font-size:12px;color:var(--g400);display:none;text-align:center}
+.lcard-footer{margin-top:20px;padding-top:16px;border-top:1px solid var(--g100);font-size:11px;color:var(--g400);text-align:center;line-height:1.5}
+.lcard-footer strong{color:var(--g600)}
 
-/* DENIED */
-#denied{position:fixed;inset:0;z-index:99;background:#1a0a0a;display:none;align-items:center;justify-content:center}
+/* ═══ DENIED ═══ */
+#denied{position:fixed;inset:0;z-index:199;background:rgba(26,62,92,.97);display:none;align-items:center;justify-content:center;padding:16px}
 #denied.show{display:flex}
-.dcard{background:#fff;border-radius:14px;padding:40px;width:380px;max-width:94vw;text-align:center}
-.dcard h2{font-size:19px;font-weight:700;color:var(--red);margin:10px 0 8px}
-.dcard p{font-size:13px;color:var(--g500);margin-bottom:20px;line-height:1.5}
+.dcard{background:#fff;border-radius:16px;padding:40px;width:100%;max-width:380px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+.dcard h2{font-size:18px;font-weight:700;color:var(--red);margin:12px 0 8px}
+.dcard p{font-size:13px;color:var(--g500);margin-bottom:20px;line-height:1.55}
 
-/* TOPBAR */
-.topbar{background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;height:52px;flex-shrink:0}
-.tb-brand{display:flex;align-items:center;gap:9px}
-.tb-brand h1{font-size:15px;font-weight:600}
-.tb-brand span{font-size:11px;color:#94a3b8;margin-left:6px}
-.tb-right{display:flex;align-items:center;gap:10px}
-.user-chip{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:4px 12px 4px 4px;font-size:12px;color:#fff}
-.avatar{width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.btn-tb{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:12px;font-family:'Inter',sans-serif;padding:5px 13px;border-radius:6px;cursor:pointer}
-.btn-tb:hover{background:rgba(255,255,255,.18)}
+/* ═══ TOPBAR ═══ */
+.topbar{
+  background:var(--brand-dark);color:#fff;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;height:54px;flex-shrink:0;
+  box-shadow:0 2px 6px rgba(26,62,92,.4);
+  border-bottom:2px solid var(--brand-teal);
+}
+.tb-brand{display:flex;align-items:center;gap:10px}
+.tb-icon{width:32px;height:32px;background:var(--brand-teal);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.tb-brand h1{font-size:15px;font-weight:600;letter-spacing:-.2px}
+.tb-brand span{font-size:10px;color:#64748b;margin-left:6px;display:none}
+.tb-right{display:flex;align-items:center;gap:8px}
+.user-chip{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 12px 4px 4px;font-size:12px;color:#fff;cursor:default}
+.avatar{width:26px;height:26px;border-radius:50%;background:var(--brand-teal);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.btn-tb{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#94a3b8;font-size:12px;font-family:'Inter',sans-serif;padding:5px 12px;border-radius:6px;cursor:pointer;transition:all .15s}
+.btn-tb:hover{background:rgba(255,255,255,.14);color:#fff}
 
-/* STEPS */
-.sbar{background:#fff;border-bottom:1px solid var(--g200);display:flex;padding:0 22px;overflow-x:auto}
-.stab{display:flex;align-items:center;gap:7px;padding:13px 18px;font-size:13px;font-weight:500;color:var(--g400);border-bottom:2px solid transparent;cursor:pointer;user-select:none;white-space:nowrap;transition:all .15s}
-.stab .n{width:21px;height:21px;border-radius:50%;background:var(--g200);color:var(--g600);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.stab.active{color:var(--blue);border-bottom-color:var(--blue)}
-.stab.active .n{background:var(--blue);color:#fff}
+/* ═══ STEPS ═══ */
+.sbar{background:#fff;border-bottom:1px solid var(--g200);display:flex;padding:0 20px;overflow-x:auto;scrollbar-width:none}
+.sbar::-webkit-scrollbar{display:none}
+.stab{display:flex;align-items:center;gap:6px;padding:12px 16px;font-size:12px;font-weight:500;color:var(--g400);border-bottom:2px solid transparent;cursor:pointer;user-select:none;white-space:nowrap;transition:all .15s;flex-shrink:0}
+.stab .n{width:20px;height:20px;border-radius:50%;background:var(--g200);color:var(--g600);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.stab.active{color:var(--brand-dark);border-bottom-color:var(--brand-teal)}
+.stab.active .n{background:var(--brand-dark);color:#fff}
 .stab.done{color:var(--green)}
 .stab.done .n{background:var(--green);color:#fff}
 
-/* MAIN */
+/* ═══ MAIN ═══ */
 .main{flex:1;overflow:hidden;display:flex;flex-direction:column}
-.panel{display:none;flex:1;padding:20px;overflow-y:auto;flex-direction:column;gap:14px}
+.panel{display:none;flex:1;padding:16px;overflow-y:auto;flex-direction:column;gap:12px}
 .panel.active{display:flex}
 
-/* CARD */
-.card{background:#fff;border:1px solid var(--g200);border-radius:10px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-.ctitle{font-size:12px;font-weight:600;color:var(--g600);text-transform:uppercase;letter-spacing:.06em;margin-bottom:13px}
+/* ═══ CARD ═══ */
+.card{background:#fff;border:1px solid var(--g200);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--sh)}
+.ctitle{font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;display:flex;align-items:center;gap:6px}
 
-/* DROPZONE */
-.dz{border:2px dashed var(--g300);border-radius:10px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--g50)}
-.dz:hover,.dz.over{border-color:var(--blue);background:#eff6ff}
-.dz .di{font-size:34px;margin-bottom:8px}
+/* ═══ DROPZONE ═══ */
+.dz{border:2px dashed var(--g300);border-radius:var(--radius);padding:28px 16px;text-align:center;cursor:pointer;transition:all .2s;background:var(--g50)}
+.dz:hover,.dz.over{border-color:var(--blue);background:var(--blue-l)}
+.dz .di{font-size:32px;margin-bottom:8px}
 .dz h3{font-size:14px;font-weight:600;color:var(--g700);margin-bottom:3px}
 .dz p{font-size:11px;color:var(--g400)}
 .dz.ok{border-style:solid;border-color:var(--green);background:var(--gl)}
 .dz.ok h3{color:var(--green)}
 
-/* CANVAS firma */
-.sigwrap{border:1px solid var(--g200);border-radius:10px;overflow:hidden}
-#sigCanvas{display:block;width:100%;height:150px;background:#fff;cursor:crosshair;touch-action:none}
-.sigtb{background:var(--g50);border-top:1px solid var(--g200);padding:7px 11px;display:flex;gap:7px;align-items:center;flex-wrap:wrap}
-.sigprev{border:1px solid var(--g200);border-radius:8px;padding:9px;background:var(--g50);min-height:56px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--g400)}
-.sigprev img{max-height:52px;max-width:100%}
+/* ═══ SIG PAD ═══ */
+.sigwrap{border:1px solid var(--g200);border-radius:var(--radius);overflow:hidden;touch-action:none}
+#sigCanvas{display:block;width:100%;height:140px;background:#fff;cursor:crosshair;touch-action:none}
+.sigtb{background:var(--g50);border-top:1px solid var(--g200);padding:8px 10px;display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.sigprev{border:1px solid var(--g200);border-radius:8px;padding:8px;background:var(--g50);min-height:52px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--g400)}
+.sigprev img{max-height:48px;max-width:100%}
 
-/* ═══ PDF VIEWER con drag ═══ */
+/* ═══ PDF VIEWER ═══ */
 .pdf-viewer-wrap{
-  background:#525659;
-  border-radius:10px;
-  overflow-y:auto;
-  max-height:62vh;
-  padding:16px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:16px;
-  border:1px solid var(--g300);
+  background:#3a3a3a;border-radius:var(--radius);overflow-y:auto;
+  max-height:55vh;padding:12px;display:flex;flex-direction:column;
+  align-items:center;gap:12px;border:1px solid var(--g300);
+  -webkit-overflow-scrolling:touch;
 }
-.pdf-page-wrap{
-  position:relative;
-  display:inline-block;
-  box-shadow:0 4px 20px rgba(0,0,0,.4);
-  border-radius:2px;
-  background:#fff;
-  cursor:default;
-}
-.pdf-page-wrap canvas{display:block}
-.pdf-page-label{
-  position:absolute;top:-24px;left:0;
-  font-size:11px;color:#ddd;font-family:'Inter',sans-serif;font-weight:500;
-}
-/* Overlay de firma arrastrable */
+.pdf-page-wrap{position:relative;display:inline-block;box-shadow:0 4px 20px rgba(0,0,0,.4);border-radius:2px;background:#fff;max-width:100%}
+.pdf-page-wrap canvas{display:block;max-width:100%;height:auto}
+.pdf-page-label{position:absolute;top:-22px;left:0;font-size:10px;color:#ddd;font-family:'Inter',sans-serif;font-weight:500}
 .sig-overlay{
-  position:absolute;
-  cursor:move;
-  user-select:none;
-  border:2px dashed #2563eb;
-  border-radius:4px;
-  background:rgba(37,99,235,.08);
+  position:absolute;cursor:move;
+  border:2px dashed var(--brand-mid);border-radius:4px;
+  background:rgba(59,168,184,.08);
   display:flex;align-items:center;justify-content:center;
-  overflow:hidden;
-  min-width:80px;min-height:30px;
+  overflow:hidden;min-width:60px;min-height:24px;
+  touch-action:none;user-select:none;-webkit-user-select:none;
 }
-.sig-overlay img{width:100%;height:100%;object-fit:contain;pointer-events:none}
+.sig-overlay img{width:100%;height:100%;object-fit:contain;pointer-events:none;touch-action:none}
 .sig-overlay.placed{border-color:var(--green);background:rgba(5,150,105,.07)}
-.sig-resize-handle{
-  position:absolute;right:-5px;bottom:-5px;
-  width:14px;height:14px;
-  background:var(--blue);border-radius:50%;
-  cursor:se-resize;
-  border:2px solid #fff;
-  z-index:10;
+.sig-resize{
+  position:absolute;right:-6px;bottom:-6px;
+  width:16px;height:16px;background:var(--brand-mid);border-radius:50%;
+  cursor:se-resize;border:2px solid #fff;z-index:10;
+  touch-action:none;
 }
-.sig-overlay.placed .sig-resize-handle{background:var(--green)}
-.pdf-hint{
-  color:#ccc;font-size:12px;text-align:center;padding:8px;
-  font-family:'Inter',sans-serif;
-}
-.pdf-loading{color:#aaa;font-size:13px;padding:40px;text-align:center}
+.sig-overlay.placed .sig-resize{background:var(--green)}
+.pdf-hint{color:#bbb;font-size:11px;text-align:center;padding:6px;font-family:'Inter',sans-serif}
+.pdf-loading{color:#aaa;font-size:13px;padding:32px;text-align:center}
 
-/* FORMS */
+/* ═══ FORMS ═══ */
 .fg{display:flex;flex-direction:column;gap:4px}
 .fl{font-size:12px;font-weight:500;color:var(--g600)}
-.fi{border:1px solid var(--g300);border-radius:8px;padding:8px 11px;font-size:13px;font-family:'Inter',sans-serif;color:var(--g900);background:#fff;width:100%;transition:border-color .15s}
-.fi:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
-.fr{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.fi{border:1px solid var(--g300);border-radius:8px;padding:9px 11px;font-size:13px;font-family:'Inter',sans-serif;color:var(--g900);background:#fff;width:100%;transition:border-color .15s;-webkit-appearance:none}
+.fi:focus{outline:none;border-color:var(--brand-mid);box-shadow:0 0 0 3px rgba(59,168,184,.15)}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
-/* RADIO */
+/* ═══ RADIO ═══ */
 .rg{display:flex;gap:8px}
-.ro{flex:1;border:1px solid var(--g300);border-radius:8px;padding:9px 13px;cursor:pointer;font-size:13px;font-weight:500;color:var(--g600);transition:all .15s;display:flex;align-items:center;gap:7px;user-select:none}
+.ro{flex:1;border:1px solid var(--g300);border-radius:8px;padding:9px 12px;cursor:pointer;font-size:13px;font-weight:500;color:var(--g600);transition:all .15s;display:flex;align-items:center;gap:7px;user-select:none}
 .ro:hover{border-color:var(--blue);color:var(--blue)}
-.ro.on{border-color:var(--blue);background:#eff6ff;color:var(--blue)}
+.ro.on{border-color:var(--blue);background:var(--blue-l);color:var(--blue)}
 .ro .dot{width:15px;height:15px;border:2px solid currentColor;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .ro.on .dot::after{content:'';width:6px;height:6px;border-radius:50%;background:var(--blue)}
 
-/* BUTTONS */
-.btn{border:none;border-radius:8px;padding:8px 15px;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+/* ═══ BUTTONS ═══ */
+.btn{border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent}
 .btn:disabled{opacity:.45;cursor:not-allowed}
-.btn-p{background:var(--blue);color:#fff}.btn-p:hover:not(:disabled){background:var(--blue-h)}
-.btn-s{background:var(--green);color:#fff}.btn-s:hover:not(:disabled){background:#047857}
+.btn:active:not(:disabled){transform:scale(.97)}
+.btn-p{background:var(--brand-dark);color:#fff}.btn-p:hover:not(:disabled){background:#163352}
+.btn-s{background:var(--brand-teal);color:#fff}.btn-s:hover:not(:disabled){background:#2f8f9e}
 .btn-g{background:var(--g100);color:var(--g700);border:1px solid var(--g200)}.btn-g:hover:not(:disabled){background:var(--g200)}
-.btn-f{width:100%;justify-content:center;padding:11px;font-size:14px}
+.btn-f{width:100%;justify-content:center;padding:12px;font-size:14px}
 .btn-lg{padding:12px 18px;font-size:14px;font-weight:600}
 
-/* INFO */
-.ib{border-radius:8px;padding:10px 13px;font-size:12px;line-height:1.6;display:flex;gap:9px;align-items:flex-start}
-.ib.bl{background:#dbeafe;color:#1e40af}
+/* ═══ INFO BOX ═══ */
+.ib{border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.6;display:flex;gap:8px;align-items:flex-start}
+.ib.bl{background:var(--blue-l);color:var(--brand-dark)}
 .ib.gr{background:var(--gl);color:#065f46}
 .ib.re{background:var(--rl);color:#991b1b}
 .ib.am{background:var(--al);color:#92400e}
 
-/* BADGE */
-.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:2px 9px;border-radius:20px}
+/* ═══ BADGE ═══ */
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px}
 .badge-g{background:var(--gl);color:var(--green)}
-.badge-b{background:#dbeafe;color:var(--blue)}
+.badge-b{background:var(--blue-l);color:var(--brand-dark)}
 
-/* PROGRESS */
+/* ═══ PROGRESS ═══ */
 .pw{height:3px;background:var(--g200);border-radius:2px;overflow:hidden}
-.pb{height:100%;background:var(--blue);width:0;border-radius:2px}
+.pb{height:100%;background:var(--brand-teal);width:0;border-radius:2px}
 .pb.spin{width:40%;animation:sl 1.2s ease-in-out infinite}
 @keyframes sl{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
 
-/* LOG */
-.log{background:#0d1117;border-radius:8px;padding:11px 13px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#7ee787;height:100px;overflow-y:auto;line-height:1.7}
+/* ═══ LOG ═══ */
+.log{background:#0d1117;border-radius:8px;padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#7ee787;height:90px;overflow-y:auto;line-height:1.7}
 .log .e{color:#ff7b72}.log .i{color:#79c0ff}
 
-/* LIB LIST */
-.liblist{display:flex;flex-direction:column;gap:7px}
-.libitem{display:flex;align-items:center;gap:10px;padding:10px 13px;border:1.5px solid var(--g200);border-radius:9px;cursor:pointer;transition:all .15s;background:var(--g50)}
-.libitem:hover{border-color:var(--blue);background:#eff6ff}
-.libitem.sel{border-color:var(--blue);background:#eff6ff}
-.libitem input[type=radio]{accent-color:var(--blue);width:15px;height:15px;flex-shrink:0}
-.libname{font-size:13px;font-weight:500;color:var(--g900)}
-.libsite{font-size:11px;color:var(--g400);margin-top:1px}
+/* ═══ FILE BROWSER ═══ */
+.fb-path{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:10px;font-size:12px;color:var(--g600)}
+.fb-crumb{cursor:pointer;color:var(--brand-mid);font-weight:500}
+.fb-crumb:hover{text-decoration:underline}
+.fb-sep{color:var(--g400)}
+.fb-list{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto}
+.fb-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1.5px solid var(--g200);border-radius:8px;cursor:pointer;transition:all .15s;background:var(--g50);font-size:13px}
+.fb-item:hover{border-color:var(--blue);background:var(--blue-l)}
+.fb-item.sel{border-color:var(--blue);background:var(--blue-l)}
+.fb-item input[type=radio]{accent-color:var(--blue);width:14px;height:14px;flex-shrink:0}
+.fb-name{font-weight:500;flex:1;color:var(--g900)}
+.fb-type{font-size:10px;color:var(--g400)}
+.fb-folder{color:var(--amber);font-size:18px;flex-shrink:0}
+.fb-new{display:flex;gap:7px;margin-top:8px}
+.fb-current{margin-top:8px;padding:8px 10px;background:var(--teal-l);border-radius:8px;font-size:12px;color:#1a5f6a;display:flex;align-items:center;gap:6px}
 
-/* SP STATUS */
-.spst{display:flex;align-items:center;gap:9px;padding:11px 13px;border-radius:8px;font-size:13px;font-weight:500;border:1px solid var(--g200);background:var(--g50)}
-.spst.ok{background:var(--gl);border-color:#a7f3d0;color:#065f46}
+/* ═══ SP STATUS ═══ */
+.spst{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;font-size:12px;font-weight:500;border:1px solid var(--g200);background:var(--g50)}
+.spst.ok{background:var(--teal-l);border-color:#b3e5ec;color:#1a5f6a}
 
-/* MISC */
-.c2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+/* ═══ MISC ═══ */
+.c2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
 input[type=color]{width:30px;height:30px;border:1px solid var(--g300);border-radius:6px;padding:2px;cursor:pointer;background:#fff}
-input[type=range]{width:75px;accent-color:var(--blue)}
+input[type=range]{width:70px;accent-color:var(--blue)}
 .fitem{display:flex;align-items:center;gap:9px;padding:9px 12px;background:var(--g50);border:1px solid var(--g200);border-radius:8px;font-size:13px}
 .fname{font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media(max-width:580px){.c2,.fr{grid-template-columns:1fr}.stab span{display:none}}
+
+/* ═══ RESPONSIVE ═══ */
+@media(min-width:640px){
+  .tb-brand span{display:inline}
+  .panel{padding:20px}
+  .card{padding:18px 20px}
+}
+@media(max-width:580px){
+  .c2,.fr{grid-template-columns:1fr}
+  .stab span{display:none}
+  .rg{flex-direction:column}
+  .lcard{padding:32px 24px}
+  .sigtb{gap:5px}
+  .fr{grid-template-columns:1fr}
+}
+@media(max-width:380px){
+  .lcard{padding:24px 18px}
+  .lcard-icon{width:44px;height:44px;font-size:22px}
+  .lcard-brand h1{font-size:18px}
+}
 </style>
 </head>
 <body>
@@ -280,36 +331,48 @@ input[type=range]{width:75px;accent-color:var(--blue)}
 <!-- LOGIN -->
 <div id="loginScreen">
   <div class="lcard">
-    <div class="logo">📄</div>
-    <h1>FirmaDoc</h1>
-    <p class="sub">Alimentos San Mateo · Gestión Documental<br>Inicia sesión con tu cuenta corporativa de Microsoft 365</p>
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:44px;margin-bottom:10px">📝</div>
+      <h1 style="font-size:22px;font-weight:700;color:var(--navy);letter-spacing:-.4px;margin-bottom:4px">SanMateo eSign</h1>
+      <p style="font-size:13px;font-weight:500;color:var(--g500);margin-bottom:12px">Alimentos San Mateo S.A.</p>
+      <hr style="border:none;border-top:1px solid var(--g200);margin:0 0 14px">
+      <p style="font-size:13px;color:var(--g600);line-height:1.6">Plataforma de firma digital de documentos.<br>Accede con tu cuenta corporativa de Microsoft 365.</p>
+    </div>
     <button class="btn-ms" id="btnLogin" onclick="doLogin()">
-      <svg width="20" height="20" viewBox="0 0 21 21"><rect x="0" y="0" width="10" height="10" fill="#F25022"/><rect x="11" y="0" width="10" height="10" fill="#7FBA00"/><rect x="0" y="11" width="10" height="10" fill="#00A4EF"/><rect x="11" y="11" width="10" height="10" fill="#FFB900"/></svg>
-      Iniciar sesión con Microsoft
+      <svg width="20" height="20" viewBox="0 0 21 21" style="flex-shrink:0">
+        <rect x="0" y="0" width="10" height="10" fill="#F25022"/>
+        <rect x="11" y="0" width="10" height="10" fill="#7FBA00"/>
+        <rect x="0" y="11" width="10" height="10" fill="#00A4EF"/>
+        <rect x="11" y="11" width="10" height="10" fill="#FFB900"/>
+      </svg>
+      Continuar con Microsoft 365
     </button>
     <div class="lerr" id="lerr"></div>
-    <p class="linfo" id="linfo" style="display:none">⏳ Verificando acceso...</p>
-    <p class="linfo" style="margin-top:14px">Solo usuarios con cuenta activa de Alimentos San Mateo pueden acceder.</p>
+    <div class="lspinner" id="lspinner">⏳ Verificando credenciales...</div>
+    <div class="lcard-footer">
+      <strong>Acceso restringido</strong><br>
+      Solo usuarios con cuenta activa de Alimentos San Mateo pueden ingresar a esta plataforma.
+    </div>
   </div>
 </div>
 
-<!-- ACCESO DENEGADO -->
+<!-- DENEGADO -->
 <div id="denied">
   <div class="dcard">
-    <div style="font-size:38px">🚫</div>
-    <h2>Sin acceso</h2>
-    <p id="deniedMsg">Tu cuenta no tiene permisos asignados.</p>
+    <div style="font-size:36px">🚫</div>
+    <h2>Acceso denegado</h2>
+    <p id="deniedMsg">Tu cuenta no tiene permisos para acceder a SanMateo eSign. Contacta al área de Sistemas.</p>
     <button class="btn btn-g btn-f" onclick="doLogout()">← Cerrar sesión</button>
   </div>
 </div>
 
 <!-- APP -->
 <div id="app" style="display:none;flex-direction:column;flex:1">
+
   <div class="topbar">
     <div class="tb-brand">
-      <span style="font-size:17px">📄</span>
-      <h1>FirmaDoc <span>Alimentos San Mateo</span></h1>
-    </div>
+      <img src="data:image/png;base64,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" alt="Alimentos San Mateo" style="height:30px;filter:brightness(0) invert(1);opacity:.95;flex-shrink:0">
+    </div>    </div>
     <div class="tb-right">
       <div class="user-chip">
         <div class="avatar" id="uAvatar">?</div>
@@ -337,38 +400,37 @@ input[type=range]{width:75px;accent-color:var(--blue)}
              ondragover="dzOver(event)" ondragleave="dzOut(event)" ondrop="dzDrop(event)">
           <div class="di">📄</div>
           <h3>Arrastra el documento aquí</h3>
-          <p>o haz clic para buscar · PDF, Word (.docx), imágenes JPG/PNG</p>
+          <p>o haz clic para buscar · Solo PDF</p>
         </div>
-        <input type="file" id="fi" accept=".pdf,.docx,.doc,.jpg,.jpeg,.png" style="display:none" onchange="onFile(event)">
-        <div id="finfo" style="display:none;margin-top:11px"></div>
+        <input type="file" id="fi" accept=".pdf" style="display:none" onchange="onFile(event)">
+        <div id="finfo" style="display:none;margin-top:10px"></div>
       </div>
       <button class="btn btn-p btn-f btn-lg" id="n1" onclick="go(2)" disabled>Continuar → Configurar firma</button>
     </div>
 
-    <!-- P2: Configurar firma -->
+    <!-- P2: Firma -->
     <div class="panel" id="p2">
       <div class="card">
         <div class="ctitle">✍️ Tipo de firma</div>
-        <div class="rg" style="margin-bottom:15px">
+        <div class="rg" style="margin-bottom:14px">
           <div class="ro on" id="ri" onclick="sigMode('img')"><div class="dot"></div>Dibujada / imagen</div>
-          <div class="ro" id="rc" onclick="sigMode('cert')"><div class="dot"></div>Certificado (.pfx / .p12)</div>
+          <div class="ro" id="rc" onclick="sigMode('cert')"><div class="dot"></div>Certificado (.pfx)</div>
         </div>
 
         <div id="imgPanel">
-          <div style="display:flex;gap:7px;margin-bottom:9px;flex-wrap:wrap;align-items:center">
+          <div style="display:flex;gap:6px;margin-bottom:9px;flex-wrap:wrap;align-items:center">
             <button class="btn btn-g" id="tdraw" onclick="sigTab('draw')" style="font-weight:600">✏️ Dibujar</button>
-            <button class="btn btn-g" id="tupload" onclick="sigTab('up')">🖼️ Cargar imagen</button>
+            <button class="btn btn-g" id="tupload" onclick="sigTab('up')">🖼️ Imagen</button>
             <div style="flex:1"></div>
             <input type="color" value="#1a1a2e" title="Color" onchange="sc=this.value">
             <input type="range" min="1" max="8" value="3" title="Grosor" oninput="sw=+this.value">
-            <label style="font-size:11px;color:var(--g500)">Grosor</label>
           </div>
           <div id="drawArea">
             <div class="sigwrap">
-              <canvas id="sigCanvas" width="700" height="150"></canvas>
+              <canvas id="sigCanvas" width="700" height="140"></canvas>
               <div class="sigtb">
                 <button class="btn btn-g" onclick="clrSig()">🗑 Limpiar</button>
-                <button class="btn btn-p" onclick="saveSig()">✓ Guardar firma</button>
+                <button class="btn btn-p" onclick="saveSig()">✓ Guardar</button>
                 <span id="sigOk" style="font-size:12px;color:var(--green);display:none">✅ Guardada</span>
               </div>
             </div>
@@ -379,19 +441,19 @@ input[type=range]{width:75px;accent-color:var(--blue)}
             </div>
             <input type="file" id="sii" accept=".png,.jpg,.jpeg" style="display:none" onchange="loadSigImg(event)">
           </div>
-          <div style="margin-top:11px">
+          <div style="margin-top:10px">
             <div class="fl" style="margin-bottom:5px">Vista previa:</div>
             <div class="sigprev" id="sprev">Sin firma guardada</div>
           </div>
         </div>
 
         <div id="certPanel" style="display:none">
-          <div class="ib bl" style="margin-bottom:13px"><span>ℹ️</span><span>Solo aplica a documentos <strong>PDF</strong>. Necesitas un .pfx o .p12 de una entidad certificadora.</span></div>
-          <div style="display:flex;flex-direction:column;gap:11px">
+          <div class="ib bl" style="margin-bottom:12px"><span>ℹ️</span><span>Necesitas un archivo .pfx o .p12 de una entidad certificadora.</span></div>
+          <div style="display:flex;flex-direction:column;gap:10px">
             <div class="fg">
               <label class="fl">Certificado (.pfx / .p12)</label>
               <div style="display:flex;gap:7px">
-                <input type="text" class="fi" id="clbl" placeholder="Sin certificado cargado" readonly style="flex:1">
+                <input type="text" class="fi" id="clbl" placeholder="Sin certificado" readonly style="flex:1">
                 <button class="btn btn-g" onclick="document.getElementById('ci').click()">📜 Buscar</button>
               </div>
               <input type="file" id="ci" accept=".pfx,.p12" style="display:none" onchange="loadCert(event)">
@@ -407,52 +469,45 @@ input[type=range]{width:75px;accent-color:var(--blue)}
       <div class="card">
         <div class="ctitle">🏷️ Datos del firmante</div>
         <div class="fr">
-          <div class="fg"><label class="fl">Nombre completo</label><input type="text" class="fi" id="sname" placeholder="Tu nombre"></div>
-          <div class="fg"><label class="fl">Cargo</label><input type="text" class="fi" id="srole" placeholder="Tu cargo"></div>
+          <div class="fg"><label class="fl">Nombre</label><input type="text" class="fi" id="sname" placeholder="Nombre completo"></div>
+          <div class="fg"><label class="fl">Cargo</label><input type="text" class="fi" id="srole" placeholder="Cargo en la empresa"></div>
         </div>
       </div>
 
-      <div style="display:flex;gap:9px">
+      <div style="display:flex;gap:8px">
         <button class="btn btn-g btn-lg" onclick="go(1)">← Volver</button>
-        <button class="btn btn-p btn-f btn-lg" id="n2" onclick="goToPosition()" disabled>Continuar → Posicionar firma</button>
+        <button class="btn btn-p btn-f btn-lg" id="n2" onclick="goToPos()" disabled>Posicionar firma →</button>
       </div>
     </div>
 
-    <!-- P3: Posicionar firma en PDF -->
+    <!-- P3: Posicionar -->
     <div class="panel" id="p3">
       <div class="card">
-        <div class="ctitle">🖱️ Posiciona tu firma en el documento</div>
-        <div class="ib bl" style="margin-bottom:13px">
-          <span>💡</span>
-          <span>Arrastra la firma a la posición deseada. Usa el círculo azul para redimensionarla. Puedes colocarla en cualquier página.</span>
+        <div class="ctitle">🖱️ Posiciona la firma en el documento</div>
+        <div class="ib bl" style="margin-bottom:11px">
+          <span>💡</span><span>Arrastra la firma con el mouse o con el dedo. Usa el círculo para redimensionar.</span>
         </div>
-        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-          <div class="fg" style="flex-direction:row;align-items:center;gap:8px">
-            <label class="fl">Tamaño firma:</label>
-            <input type="range" id="sigSizeRange" min="60" max="300" value="160" style="width:100px" oninput="resizeSigOverlay(+this.value)">
-            <span id="sigSizeLabel" style="font-size:12px;color:var(--g500)">160px</span>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+          <div style="display:flex;align-items:center;gap:6px">
+            <label class="fl" style="white-space:nowrap">Tamaño:</label>
+            <input type="range" id="sigSizeRange" min="50" max="280" value="150" style="width:90px" oninput="resizeSigOverlay(+this.value)">
+            <span id="sigSizeLabel" style="font-size:11px;color:var(--g500);min-width:32px">150</span>
           </div>
-          <div style="flex:1"></div>
-          <div class="fg" style="flex-direction:row;align-items:center;gap:8px">
-            <label class="fl" style="white-space:nowrap">Sello fecha:</label>
-            <select class="fi" id="sts" style="width:auto;padding:7px 28px 7px 10px">
-              <option value="1">Sí, incluir</option>
+          <div style="display:flex;align-items:center;gap:6px">
+            <label class="fl">Fecha:</label>
+            <select class="fi" id="sts" style="width:auto;padding:6px 26px 6px 8px;font-size:12px">
+              <option value="1">Incluir</option>
               <option value="0">No incluir</option>
             </select>
           </div>
-          <button class="btn btn-g" onclick="resetSigPos()">↺ Resetear posición</button>
+          <button class="btn btn-g" style="font-size:12px;padding:6px 12px" onclick="resetSigPos()">↺ Resetear</button>
         </div>
-
         <div class="pdf-viewer-wrap" id="pdfViewer">
-          <div class="pdf-loading" id="pdfLoading">⏳ Cargando páginas del PDF...</div>
+          <div class="pdf-loading">⏳ Cargando PDF...</div>
         </div>
-
-        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <div id="posInfo" style="font-size:12px;color:var(--g500)">Sin posición seleccionada</div>
-        </div>
+        <div id="posInfo" style="margin-top:8px;font-size:11px;color:var(--g500)">Sin posición seleccionada</div>
       </div>
-
-      <div style="display:flex;gap:9px">
+      <div style="display:flex;gap:8px">
         <button class="btn btn-g btn-lg" onclick="go(2)">← Volver</button>
         <button class="btn btn-p btn-f btn-lg" id="n3" onclick="go(4)" disabled>Continuar → Firmar</button>
       </div>
@@ -462,16 +517,16 @@ input[type=range]{width:75px;accent-color:var(--blue)}
     <div class="panel" id="p4">
       <div class="c2">
         <div class="card"><div class="ctitle">📄 Documento</div><div id="dsum" style="font-size:13px;color:var(--g600)">—</div></div>
-        <div class="card"><div class="ctitle">📍 Posición de firma</div><div id="possum" style="font-size:13px;color:var(--g600)">—</div></div>
+        <div class="card"><div class="ctitle">📍 Posición firma</div><div id="possum" style="font-size:13px;color:var(--g600)">—</div></div>
       </div>
       <div class="card">
-        <div id="sres" style="display:none;margin-bottom:13px"></div>
-        <div class="pw" id="spw" style="display:none;margin-bottom:13px"><div class="pb spin"></div></div>
+        <div id="sres" style="display:none;margin-bottom:12px"></div>
+        <div class="pw" id="spw" style="display:none;margin-bottom:12px"><div class="pb spin"></div></div>
         <button class="btn btn-s btn-f btn-lg" id="bsign" onclick="doSign()">✍️ Firmar documento</button>
-        <p style="margin-top:7px;font-size:11px;color:var(--g400);text-align:center">El archivo original no se modifica. Se genera una copia firmada.</p>
+        <p style="margin-top:7px;font-size:11px;color:var(--g400);text-align:center">El archivo original no se modifica.</p>
       </div>
       <div class="card"><div class="ctitle">📟 Registro</div><div class="log" id="log">Listo.<br></div></div>
-      <div style="display:flex;gap:9px">
+      <div style="display:flex;gap:8px">
         <button class="btn btn-g btn-lg" onclick="go(3)">← Volver</button>
         <button class="btn btn-p btn-f btn-lg" id="n4" onclick="go(5)" disabled>Continuar → SharePoint</button>
       </div>
@@ -480,26 +535,53 @@ input[type=range]{width:75px;accent-color:var(--blue)}
     <!-- P5: SharePoint -->
     <div class="panel" id="p5">
       <div class="card">
-        <div class="ctitle">🔐 Sesión Microsoft 365</div>
+        <div class="ctitle">🔐 Sesión activa</div>
         <div class="spst ok"><span>✅</span><span id="spStTxt">Autenticado</span></div>
       </div>
+
       <div class="card">
-        <div class="ctitle">📚 Biblioteca destino</div>
-        <div id="libNote" class="ib bl" style="margin-bottom:12px"><span>ℹ️</span><span id="libNoteT">Cargando bibliotecas...</span></div>
-        <div class="liblist" id="liblist"><div style="font-size:13px;color:var(--g400);padding:12px;text-align:center">Conectando...</div></div>
-      </div>
-      <div class="card">
-        <div class="ctitle">📁 Destino y nombre</div>
-        <div class="fr">
-          <div class="fg"><label class="fl">Subcarpeta (opcional)</label><input type="text" class="fi" id="sfolder" placeholder="ej: Firmados/2026"></div>
-          <div class="fg"><label class="fl">Nombre del archivo</label><input type="text" class="fi" id="sfname" placeholder="documento_firmado.pdf"></div>
+        <div class="ctitle">📚 Biblioteca y carpeta destino</div>
+        <div class="ib bl" style="margin-bottom:10px"><span>ℹ️</span><span id="libNoteT">Cargando tus bibliotecas...</span></div>
+
+        <!-- Selector de biblioteca -->
+        <div class="fg" style="margin-bottom:12px">
+          <label class="fl">Biblioteca</label>
+          <select class="fi" id="driveSelect" onchange="onDriveChange()">
+            <option value="">— Selecciona una biblioteca —</option>
+          </select>
+        </div>
+
+        <!-- Navegador de carpetas -->
+        <div id="folderBrowser" style="display:none">
+          <div class="fl" style="margin-bottom:6px">Carpeta destino</div>
+          <div class="fb-path" id="fbPath"></div>
+          <div class="fb-list" id="fbList">
+            <div style="font-size:12px;color:var(--g400);padding:8px">Cargando carpetas...</div>
+          </div>
+          <div class="fb-current" id="fbCurrent">
+            <span>📁</span><span id="fbCurrentText">Raíz de la biblioteca</span>
+          </div>
+          <div class="fb-new">
+            <input type="text" class="fi" id="newFolderName" placeholder="Nueva subcarpeta..." style="flex:1;font-size:12px">
+            <button class="btn btn-g" style="font-size:12px;padding:8px 12px;white-space:nowrap" onclick="createFolder()">+ Crear</button>
+          </div>
         </div>
       </div>
+
       <div class="card">
-        <div id="upres" style="display:none;margin-bottom:11px"></div>
-        <div class="pw" id="uppw" style="display:none;margin-bottom:11px"><div class="pb spin"></div></div>
+        <div class="ctitle">📝 Nombre del archivo</div>
+        <div class="fg">
+          <label class="fl">Nombre en SharePoint</label>
+          <input type="text" class="fi" id="sfname" placeholder="documento_firmado.pdf">
+        </div>
+      </div>
+
+      <div class="card">
+        <div id="upres" style="display:none;margin-bottom:10px"></div>
+        <div class="pw" id="uppw" style="display:none;margin-bottom:10px"><div class="pb spin"></div></div>
         <button class="btn btn-p btn-f btn-lg" id="bup" onclick="doUpload()">☁️ Subir a SharePoint</button>
       </div>
+
       <div class="card">
         <div class="ctitle">💾 Descarga local</div>
         <button class="btn btn-g btn-f" id="bdl" onclick="doDownload()" disabled>⬇️ Descargar documento firmado</button>
@@ -510,126 +592,141 @@ input[type=range]{width:75px;accent-color:var(--blue)}
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 //  ⚙️  CONFIGURACIÓN
-// ═══════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 const CFG = {
   clientId:  '804d6d3d-4109-48bf-84fd-eb26d4508947',
   tenantId:  'b8235890-1a0b-4f78-87aa-6631aeef75a8',
   spSiteUrl: 'https://alimesa.sharepoint.com/sites/SistemaDocumental-AlimentosSanMateo',
   redirectUri: 'https://procesossm.github.io/SMFirmaDoc/'
 };
-// ═══════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 
-// Variables globales — se asignan tras cargar MSAL
 let msalApp = null;
 const SCOPES = ['User.Read','https://graph.microsoft.com/Sites.ReadWrite.All','https://graph.microsoft.com/Files.ReadWrite.All'];
-
-let spToken=null, drives={}, currentUser=null;
+let spToken=null, siteId=null, drives={}, currentDriveId=null;
+let currentFolderPath='', currentFolderId='root';
 let S={ file:null, bytes:null, sigMode:'img', sigData:null, certFile:null, signedBytes:null, signedName:'' };
 let sc='#1a1a2e', sw=3, drawing=false, lx=0, ly=0;
+let sigPos={page:0,x:0,y:0,w:150,h:0,pdfW:0,pdfH:0,set:false};
+let activeDrag=null, activeResize=null;
 
-// Posicionamiento firma
-let sigPos = { page:0, x:0, y:0, w:160, h:0, pdfW:0, pdfH:0, scale:1, set:false };
-let activeDrag = null;
-let activeResize = null;
+// ── MSAL ────────────────────────────────────────────────────
+(function(){
+  try{
+    msalApp = new msal.PublicClientApplication({
+      auth:{clientId:CFG.clientId, authority:'https://login.microsoftonline.com/'+CFG.tenantId, redirectUri:CFG.redirectUri},
+      cache:{cacheLocation:'sessionStorage', storeAuthStateInCookie:false}
+    });
+    init();
+  }catch(e){
+    document.getElementById('lerr').textContent='Error al inicializar: '+e.message;
+    document.getElementById('lerr').style.display='block';
+    document.getElementById('btnLogin').disabled=false;
+  }
+})();
 
-// ─────────────────────────────────────────────────────────────────
-// INIT / AUTH
-// ─────────────────────────────────────────────────────────────────
 async function init(){
   await msalApp.initialize();
   try{
-    const r = await msalApp.handleRedirectPromise();
-    if(r){ await afterLogin(r.account); return; }
-    const accs = msalApp.getAllAccounts();
+    const r=await msalApp.handleRedirectPromise();
+    if(r){await afterLogin(r.account);return}
+    const accs=msalApp.getAllAccounts();
     if(accs.length){
-      try{ const t=await msalApp.acquireTokenSilent({scopes:SCOPES,account:accs[0]}); await afterLogin(t.account); }
-      catch{ showLogin(); }
-    } else showLogin();
-  }catch(e){ showErr(e.message); showLogin(); }
+      try{const t=await msalApp.acquireTokenSilent({scopes:SCOPES,account:accs[0]});await afterLogin(t.account)}
+      catch{showLogin()}
+    }else showLogin();
+  }catch(e){showErr(e.message);showLogin()}
 }
-function showLogin(){ document.getElementById('loginScreen').style.display='flex'; document.getElementById('app').style.display='none'; }
+function showLogin(){document.getElementById('loginScreen').style.display='flex';document.getElementById('app').style.display='none'}
 async function doLogin(){
-  if(!msalApp){ showErr('Autenticación no lista todavía. Espera un momento y vuelve a intentarlo.'); return; }
+  if(!msalApp){showErr('Autenticación no lista. Recarga la página.');return}
   document.getElementById('btnLogin').disabled=true;
-  document.getElementById('linfo').style.display='block';
+  document.getElementById('lspinner').style.display='block';
   document.getElementById('lerr').style.display='none';
-  try{ await msalApp.loginRedirect({scopes:SCOPES}); }
-  catch(e){ showErr(e.message); document.getElementById('btnLogin').disabled=false; document.getElementById('linfo').style.display='none'; }
+  try{await msalApp.loginRedirect({scopes:SCOPES})}
+  catch(e){showErr(e.message);document.getElementById('btnLogin').disabled=false;document.getElementById('lspinner').style.display='none'}
 }
-function doLogout(){ if(msalApp) msalApp.logoutRedirect(); }
+function doLogout(){if(msalApp)msalApp.logoutRedirect()}
+
 async function afterLogin(account){
-  currentUser=account;
-  document.getElementById('linfo').style.display='block';
-  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('lspinner').style.display='block';
   try{
     const t=await msalApp.acquireTokenSilent({scopes:SCOPES,account});
     spToken=t.accessToken;
+    // Obtener site ID
     const hp=CFG.spSiteUrl.replace('https://','').split('/');
     const sr=await fetch(`https://graph.microsoft.com/v1.0/sites/${hp[0]}:/${hp.slice(1).join('/')}`,{headers:{Authorization:`Bearer ${spToken}`}});
-    if(!sr.ok) throw new Error('No se pudo acceder al sitio de SharePoint.');
+    if(!sr.ok)throw new Error('No se pudo acceder al sitio de SharePoint.');
     const sd=await sr.json();
-    const dr=await fetch(`https://graph.microsoft.com/v1.0/sites/${sd.id}/drives`,{headers:{Authorization:`Bearer ${spToken}`}});
+    siteId=sd.id;
+    // Obtener drives — solo los que el usuario puede leer
+    const dr=await fetch(`https://graph.microsoft.com/v1.0/sites/${siteId}/drives`,{headers:{Authorization:`Bearer ${spToken}`}});
+    if(!dr.ok)throw new Error('Sin acceso a las bibliotecas del sitio.');
     const dd=await dr.json();
     drives={};
     (dd.value||[]).forEach(d=>drives[d.name]=d.id);
-    if(!Object.keys(drives).length){ showDenied(`Sin acceso a bibliotecas para ${account.name}.`); return; }
+    if(!Object.keys(drives).length){showDenied(`Sin acceso a ninguna biblioteca para ${account.name}.`);return}
+    // Mostrar app
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('app').style.display='flex';
     const ini=account.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     document.getElementById('uAvatar').textContent=ini;
     document.getElementById('uName').textContent=account.name.split(' ')[0];
     document.getElementById('sname').value=account.name;
-    document.getElementById('spStTxt').textContent=`${account.name} · ${account.username}`;
-    buildLibList(Object.keys(drives));
-    addLog(`✅ Sesión: ${account.name}`,'i');
-  }catch(e){ if(e.message&&e.message.includes('acceso')) showDenied(e.message); else{ showErr(e.message); document.getElementById('btnLogin').disabled=false; document.getElementById('linfo').style.display='none'; } }
+    document.getElementById('spStTxt').textContent=account.name+' · '+account.username;
+    // Poblar selector de bibliotecas
+    const sel=document.getElementById('driveSelect');
+    sel.innerHTML='<option value="">— Selecciona una biblioteca —</option>';
+    Object.keys(drives).forEach(name=>{
+      const opt=document.createElement('option');
+      opt.value=drives[name];opt.textContent='📚 '+name;
+      sel.appendChild(opt);
+    });
+    document.getElementById('libNoteT').textContent=Object.keys(drives).length+' biblioteca(s) disponibles según tus permisos.';
+    addLog('✅ Sesión: '+account.name,'i');
+  }catch(e){
+    if(e.message&&e.message.includes('acceso'))showDenied(e.message);
+    else{showErr(e.message);document.getElementById('btnLogin').disabled=false;document.getElementById('lspinner').style.display='none'}
+  }
 }
-function showDenied(msg){ document.getElementById('loginScreen').style.display='none'; document.getElementById('denied').style.display='flex'; document.getElementById('deniedMsg').textContent=msg; }
-function showErr(msg){ const el=document.getElementById('lerr'); el.textContent='Error: '+msg; el.style.display='block'; }
+function showDenied(msg){document.getElementById('loginScreen').style.display='none';document.getElementById('denied').style.display='flex';document.getElementById('deniedMsg').textContent=msg}
+function showErr(msg){const el=document.getElementById('lerr');el.textContent='Error: '+msg;el.style.display='block'}
 
-// ─────────────────────────────────────────────────────────────────
-// NAVEGACIÓN
-// ─────────────────────────────────────────────────────────────────
+// ── NAVEGACIÓN ──────────────────────────────────────────────
 function go(n){
   [1,2,3,4,5].forEach(i=>{
     document.getElementById('p'+i).classList.toggle('active',i===n);
     const t=document.getElementById('t'+i);
     t.classList.remove('active','done');
-    if(i===n) t.classList.add('active');
-    else if(i<n) t.classList.add('done');
+    if(i===n)t.classList.add('active');
+    else if(i<n)t.classList.add('done');
   });
-  if(n===4) buildSignSummary();
-  if(n===5 && !document.getElementById('sfname').value && S.signedName) document.getElementById('sfname').value=S.signedName;
+  if(n===4)buildSummary();
+  if(n===5&&!document.getElementById('sfname').value&&S.signedName)document.getElementById('sfname').value=S.signedName;
 }
 
-// ─────────────────────────────────────────────────────────────────
-// PASO 1 — Cargar archivo
-// ─────────────────────────────────────────────────────────────────
+// ── PASO 1 ──────────────────────────────────────────────────
 function dzOver(e){e.preventDefault();document.getElementById('dz').classList.add('over')}
 function dzOut(){document.getElementById('dz').classList.remove('over')}
 function dzDrop(e){e.preventDefault();dzOut();const f=e.dataTransfer.files[0];if(f)loadFile(f)}
 function onFile(e){if(e.target.files[0])loadFile(e.target.files[0])}
 function loadFile(f){
-  const ext=f.name.split('.').pop().toLowerCase();
-  if(!['pdf','docx','doc','jpg','jpeg','png'].includes(ext)){alert('Formato no compatible.');return}
+  if(f.name.split('.').pop().toLowerCase()!=='pdf'){alert('Solo se permiten archivos PDF.');return}
   S.file=f;
-  const r=new FileReader(); r.onload=e=>{ S.bytes=e.target.result; }; r.readAsArrayBuffer(f);
+  const r=new FileReader();r.onload=e=>{S.bytes=e.target.result};r.readAsArrayBuffer(f);
   const dz=document.getElementById('dz');
   dz.className='dz ok';
-  dz.innerHTML=`<div class="di">✅</div><h3>${f.name}</h3><p>${(f.size/1024).toFixed(1)} KB · ${ext.toUpperCase()}</p>`;
+  dz.innerHTML='<div class="di">✅</div><h3>'+f.name+'</h3><p>'+(f.size/1024).toFixed(1)+' KB · PDF</p>';
   document.getElementById('finfo').style.display='block';
-  document.getElementById('finfo').innerHTML=`<div class="fitem"><span style="font-size:19px">${ext==='pdf'?'📕':ext==='docx'||ext==='doc'?'📘':'🖼️'}</span><span class="fname">${f.name}</span><span style="font-size:11px;color:var(--g400)">${(f.size/1024).toFixed(1)} KB</span><span class="badge badge-b">${ext.toUpperCase()}</span></div>`;
+  document.getElementById('finfo').innerHTML='<div class="fitem"><span style="font-size:18px">📕</span><span class="fname">'+f.name+'</span><span style="font-size:11px;color:var(--g400)">'+(f.size/1024).toFixed(1)+' KB</span><span class="badge badge-b">PDF</span></div>';
   document.getElementById('n1').disabled=false;
-  addLog(`📂 ${f.name}`);
-  // reset posición anterior
-  sigPos={page:0,x:0,y:0,w:160,h:0,pdfW:0,pdfH:0,scale:1,set:false};
+  sigPos={page:0,x:0,y:0,w:150,h:0,pdfW:0,pdfH:0,set:false};
+  addLog('📂 '+f.name);
 }
 
-// ─────────────────────────────────────────────────────────────────
-// PASO 2 — Configurar firma
-// ─────────────────────────────────────────────────────────────────
+// ── PASO 2 ──────────────────────────────────────────────────
 function sigMode(m){
   S.sigMode=m;
   document.getElementById('ri').classList.toggle('on',m==='img');
@@ -646,7 +743,11 @@ function sigTab(t){
 }
 const cv=document.getElementById('sigCanvas'),ctx=cv.getContext('2d');
 ctx.lineCap='round';ctx.lineJoin='round';
-function gpos(e){const r=cv.getBoundingClientRect(),X=cv.width/r.width,Y=cv.height/r.height;const cx=e.touches?e.touches[0].clientX:e.clientX,cy=e.touches?e.touches[0].clientY:e.clientY;return{x:(cx-r.left)*X,y:(cy-r.top)*Y}}
+function gpos(e){
+  const r=cv.getBoundingClientRect(),X=cv.width/r.width,Y=cv.height/r.height;
+  const src=e.touches?e.touches[0]:e;
+  return{x:(src.clientX-r.left)*X,y:(src.clientY-r.top)*Y};
+}
 cv.addEventListener('mousedown',e=>{drawing=true;const p=gpos(e);lx=p.x;ly=p.y});
 cv.addEventListener('mousemove',e=>{if(!drawing)return;const p=gpos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.strokeStyle=sc;ctx.lineWidth=sw;ctx.stroke();lx=p.x;ly=p.y});
 cv.addEventListener('mouseup',()=>drawing=false);cv.addEventListener('mouseleave',()=>drawing=false);
@@ -654,305 +755,221 @@ cv.addEventListener('touchstart',e=>{e.preventDefault();drawing=true;const p=gpo
 cv.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const p=gpos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.strokeStyle=sc;ctx.lineWidth=sw;ctx.stroke();lx=p.x;ly=p.y},{passive:false});
 cv.addEventListener('touchend',()=>drawing=false);
 function clrSig(){ctx.clearRect(0,0,cv.width,cv.height);document.getElementById('sigOk').style.display='none';S.sigData=null;checkSigReady()}
-function saveSig(){S.sigData=cv.toDataURL('image/png');document.getElementById('sigOk').style.display='inline';document.getElementById('sprev').innerHTML=`<img src="${S.sigData}" style="max-height:52px">`;addLog('✅ Firma guardada');checkSigReady()}
-function loadSigImg(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{S.sigData=ev.target.result;document.getElementById('sprev').innerHTML=`<img src="${S.sigData}" style="max-height:52px">`;addLog(`🖼️ ${f.name}`);checkSigReady()};r.readAsDataURL(f)}
-function loadCert(e){const f=e.target.files[0];if(!f)return;S.certFile=f;document.getElementById('clbl').value=f.name;addLog(`📜 ${f.name}`);checkSigReady()}
+function saveSig(){S.sigData=cv.toDataURL('image/png');document.getElementById('sigOk').style.display='inline';document.getElementById('sprev').innerHTML='<img src="'+S.sigData+'" style="max-height:48px">';addLog('✅ Firma guardada');checkSigReady()}
+function loadSigImg(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{S.sigData=ev.target.result;document.getElementById('sprev').innerHTML='<img src="'+S.sigData+'" style="max-height:48px">';addLog('🖼️ '+f.name);checkSigReady()};r.readAsDataURL(f)}
+function loadCert(e){const f=e.target.files[0];if(!f)return;S.certFile=f;document.getElementById('clbl').value=f.name;addLog('📜 '+f.name);checkSigReady()}
 function checkSigReady(){
-  const ready=(S.sigMode==='img'&&S.sigData)||(S.sigMode==='cert'&&S.certFile);
-  document.getElementById('n2').disabled=!ready;
+  const ok=(S.sigMode==='img'&&S.sigData)||(S.sigMode==='cert'&&S.certFile);
+  document.getElementById('n2').disabled=!ok;
 }
 
-async function goToPosition(){
-  const ext=S.file?.name.split('.').pop().toLowerCase();
-  if(ext==='pdf'){
-    go(3);
-    await renderPDFPages();
-  } else {
-    // Para no-PDF saltamos el paso de posición
-    go(4);
-  }
-}
+async function goToPos(){go(3);await renderPDFPages()}
 
-// ─────────────────────────────────────────────────────────────────
-// PASO 3 — PDF Viewer con drag & drop de firma
-// ─────────────────────────────────────────────────────────────────
+// ── PASO 3: PDF Viewer con drag (mouse + touch) ─────────────
 async function loadPdfJs(){
-  if(window.pdfjsLib) return window.pdfjsLib;
+  if(window.pdfjsLib)return window.pdfjsLib;
   return new Promise((res,rej)=>{
     const s=document.createElement('script');
     s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    s.onload=()=>{
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      res(window.pdfjsLib);
-    };
-    s.onerror=rej;
-    document.head.appendChild(s);
+    s.onload=()=>{window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';res(window.pdfjsLib)};
+    s.onerror=rej;document.head.appendChild(s);
   });
 }
 
 async function renderPDFPages(){
   const viewer=document.getElementById('pdfViewer');
-  const loading=document.getElementById('pdfLoading');
-  viewer.innerHTML='<div class="pdf-loading" id="pdfLoading">⏳ Renderizando páginas...</div>';
-
+  viewer.innerHTML='<div class="pdf-loading">⏳ Renderizando páginas...</div>';
   try{
     const pdfjsLib=await loadPdfJs();
-    // Usar copia del buffer para no consumirlo — se necesita intacto para firmar después
     const bytes=new Uint8Array(S.bytes.slice(0));
     const pdf=await pdfjsLib.getDocument({data:bytes}).promise;
-    viewer.innerHTML='<p class="pdf-hint">Arrastra la firma 🖊 a la posición deseada en cualquier página</p>';
-
+    viewer.innerHTML='<p class="pdf-hint">Arrastra la firma ✍ a la posición deseada · Toca y arrastra en móvil</p>';
+    // Calcular escala responsiva
+    const viewerW=viewer.clientWidth-32;
     for(let i=1;i<=pdf.numPages;i++){
       const page=await pdf.getPage(i);
-      const viewport=page.getViewport({scale:1.3});
-
+      const vp0=page.getViewport({scale:1});
+      const scale=Math.min(1.4, (viewerW)/vp0.width);
+      const viewport=page.getViewport({scale});
       const wrap=document.createElement('div');
       wrap.className='pdf-page-wrap';
       wrap.dataset.pageIndex=i-1;
       wrap.style.width=viewport.width+'px';
       wrap.style.height=viewport.height+'px';
-
       const lbl=document.createElement('div');
       lbl.className='pdf-page-label';
-      lbl.textContent=`Página ${i} de ${pdf.numPages}`;
+      lbl.textContent='Página '+i+' de '+pdf.numPages;
       wrap.appendChild(lbl);
-
       const canvas=document.createElement('canvas');
-      canvas.width=viewport.width;
-      canvas.height=viewport.height;
-      canvas.style.display='block';
+      canvas.width=viewport.width;canvas.height=viewport.height;
+      canvas.style.display='block';canvas.style.maxWidth='100%';
       await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
       wrap.appendChild(canvas);
-
-      // Overlay de firma (solo uno, se mueve entre páginas)
-      if(i===1) createSigOverlay(wrap, viewport.width, viewport.height, i-1);
-
+      if(i===1){
+        const vp1=page.getViewport({scale:1});
+        sigPos.pdfW=vp1.width;sigPos.pdfH=vp1.height;
+        createSigOverlay(wrap,viewport.width,viewport.height,0,scale);
+      }
       viewer.appendChild(wrap);
     }
-
-    // Guardar dims de la primera página (referencia PDF real)
-    const firstPage=await pdf.getPage(1);
-    const vp=firstPage.getViewport({scale:1});
-    sigPos.pdfW=vp.width;
-    sigPos.pdfH=vp.height;
-
-    addLog(`📄 ${pdf.numPages} página(s) renderizadas`,'i');
-  }catch(e){
-    viewer.innerHTML=`<div class="ib re" style="margin:20px"><span>❌</span><span>Error al renderizar PDF: ${e.message}</span></div>`;
-  }
+    addLog('📄 '+pdf.numPages+' página(s) renderizadas','i');
+  }catch(e){viewer.innerHTML='<div class="ib re" style="margin:16px"><span>❌</span><span>'+e.message+'</span></div>'}
 }
 
-function createSigOverlay(pageWrap, pageW, pageH, pageIndex){
-  // Posición inicial: esquina inferior derecha
+function createSigOverlay(pageWrap,pageW,pageH,pageIndex,renderScale){
   const W=+document.getElementById('sigSizeRange').value;
   const aspect=getSigAspect();
   const H=Math.round(W/aspect);
-  const startX=pageW-W-30;
-  const startY=pageH-H-30;
-
+  const sx=pageW-W-20, sy=pageH-H-20;
   const overlay=document.createElement('div');
   overlay.className='sig-overlay placed';
   overlay.id='sigOverlay';
-  overlay.style.left=startX+'px';
-  overlay.style.top=startY+'px';
-  overlay.style.width=W+'px';
-  overlay.style.height=H+'px';
-
+  overlay.style.cssText='left:'+sx+'px;top:'+sy+'px;width:'+W+'px;height:'+H+'px';
   if(S.sigData){
-    const img=document.createElement('img');
-    img.src=S.sigData;
-    overlay.appendChild(img);
-  } else {
-    overlay.textContent='✍ Firma';
-    overlay.style.fontSize='13px';
-    overlay.style.color='var(--blue)';
-    overlay.style.fontWeight='600';
+    const img=document.createElement('img');img.src=S.sigData;overlay.appendChild(img);
+  }else{
+    overlay.innerHTML='<span style="font-size:12px;color:var(--blue);font-weight:600">✍ Firma</span>';
   }
-
   const handle=document.createElement('div');
-  handle.className='sig-resize-handle';
+  handle.className='sig-resize';
   overlay.appendChild(handle);
-
-  // Drag move
+  // ── DRAG mouse ──
   overlay.addEventListener('mousedown',e=>{
-    if(e.target===handle) return;
+    if(e.target===handle)return;
     e.preventDefault();
-    activeDrag={el:overlay,wrap:pageWrap,startX:e.clientX,startY:e.clientY,
-      origLeft:parseInt(overlay.style.left),origTop:parseInt(overlay.style.top)};
+    activeDrag={el:overlay,wrap:pageWrap,sx:e.clientX,sy:e.clientY,ox:parseInt(overlay.style.left),oy:parseInt(overlay.style.top)};
   });
-
-  // Resize
+  // ── DRAG touch ──
+  overlay.addEventListener('touchstart',e=>{
+    if(e.target===handle)return;
+    e.stopPropagation();
+    const t=e.touches[0];
+    activeDrag={el:overlay,wrap:pageWrap,sx:t.clientX,sy:t.clientY,ox:parseInt(overlay.style.left),oy:parseInt(overlay.style.top)};
+  },{passive:true});
+  // ── RESIZE mouse ──
   handle.addEventListener('mousedown',e=>{
     e.preventDefault();e.stopPropagation();
-    activeResize={el:overlay,startX:e.clientX,startY:e.clientY,
-      origW:overlay.offsetWidth,origH:overlay.offsetHeight};
+    activeResize={el:overlay,sx:e.clientX,sy:e.clientY,ow:overlay.offsetWidth,oh:overlay.offsetHeight};
   });
-
-  // Touch drag
-  overlay.addEventListener('touchstart',e=>{
-    if(e.target===handle) return;
+  // ── RESIZE touch ──
+  handle.addEventListener('touchstart',e=>{
+    e.stopPropagation();
     const t=e.touches[0];
-    activeDrag={el:overlay,wrap:pageWrap,startX:t.clientX,startY:t.clientY,
-      origLeft:parseInt(overlay.style.left),origTop:parseInt(overlay.style.top)};
+    activeResize={el:overlay,sx:t.clientX,sy:t.clientY,ow:overlay.offsetWidth,oh:overlay.offsetHeight};
   },{passive:true});
-
   pageWrap.appendChild(overlay);
-  updateSigPos(overlay, pageWrap, pageIndex);
+  updateSigPos(overlay,pageWrap,pageIndex);
   document.getElementById('n3').disabled=false;
 }
 
-// Mouse move global para drag y resize
+// ── Eventos globales mouse ──
 document.addEventListener('mousemove',e=>{
-  if(activeDrag){
-    const dx=e.clientX-activeDrag.startX;
-    const dy=e.clientY-activeDrag.startY;
-    const wrap=activeDrag.wrap;
-    const el=activeDrag.el;
-    const maxX=wrap.offsetWidth-el.offsetWidth;
-    const maxY=wrap.offsetHeight-el.offsetHeight;
-    const newL=Math.max(0,Math.min(maxX,activeDrag.origLeft+dx));
-    const newT=Math.max(0,Math.min(maxY,activeDrag.origTop+dy));
-    el.style.left=newL+'px';
-    el.style.top=newT+'px';
-    // Si se arrastra a otra página
-    moveSigToPage(e, el);
-    updateSigPos(el, activeDrag.wrap, +activeDrag.wrap.dataset.pageIndex);
-  }
-  if(activeResize){
-    const dx=e.clientX-activeResize.startX;
-    const dy=e.clientY-activeResize.startY;
-    const newW=Math.max(60,Math.min(400,activeResize.origW+dx));
-    const aspect=getSigAspect();
-    const newH=Math.round(newW/aspect);
-    activeResize.el.style.width=newW+'px';
-    activeResize.el.style.height=newH+'px';
-    const wrap=activeResize.el.parentElement;
-    if(wrap) updateSigPos(activeResize.el,wrap,+wrap.dataset.pageIndex);
-    document.getElementById('sigSizeRange').value=newW;
-    document.getElementById('sigSizeLabel').textContent=newW+'px';
-  }
+  if(activeDrag){doDrag(e.clientX,e.clientY)}
+  if(activeResize){doResize(e.clientX,e.clientY)}
 });
-document.addEventListener('mouseup',()=>{ activeDrag=null; activeResize=null; });
-document.addEventListener('touchend',()=>{ activeDrag=null; });
+document.addEventListener('mouseup',()=>{activeDrag=null;activeResize=null});
+
+// ── Eventos globales touch ──
 document.addEventListener('touchmove',e=>{
-  if(!activeDrag)return;
+  if(!activeDrag&&!activeResize)return;
+  e.preventDefault();
   const t=e.touches[0];
-  const dx=t.clientX-activeDrag.startX;
-  const dy=t.clientY-activeDrag.startY;
-  const el=activeDrag.el,wrap=activeDrag.wrap;
+  if(activeDrag)doDrag(t.clientX,t.clientY);
+  if(activeResize)doResize(t.clientX,t.clientY);
+},{passive:false});
+document.addEventListener('touchend',()=>{activeDrag=null;activeResize=null},{passive:true});
+
+function doDrag(cx,cy){
+  const {el,wrap,sx,sy,ox,oy}=activeDrag;
+  const dx=cx-sx, dy=cy-sy;
   const maxX=wrap.offsetWidth-el.offsetWidth;
   const maxY=wrap.offsetHeight-el.offsetHeight;
-  el.style.left=Math.max(0,Math.min(maxX,activeDrag.origLeft+dx))+'px';
-  el.style.top=Math.max(0,Math.min(maxY,activeDrag.origTop+dy))+'px';
-  updateSigPos(el,wrap,+wrap.dataset.pageIndex);
-},{passive:true});
-
-function moveSigToPage(mouseEvent, el){
-  // Detectar si el mouse está sobre otra página y reubicar el overlay
+  const nl=Math.max(0,Math.min(maxX,ox+dx));
+  const nt=Math.max(0,Math.min(maxY,oy+dy));
+  el.style.left=nl+'px';el.style.top=nt+'px';
+  // Mover entre páginas
   const pages=document.querySelectorAll('.pdf-page-wrap');
   pages.forEach(pg=>{
-    if(pg===el.parentElement) return;
+    if(pg===wrap)return;
     const r=pg.getBoundingClientRect();
-    if(mouseEvent.clientX>=r.left&&mouseEvent.clientX<=r.right&&mouseEvent.clientY>=r.top&&mouseEvent.clientY<=r.bottom){
-      const relX=mouseEvent.clientX-r.left-el.offsetWidth/2;
-      const relY=mouseEvent.clientY-r.top-el.offsetHeight/2;
+    if(cx>=r.left&&cx<=r.right&&cy>=r.top&&cy<=r.bottom){
+      const relX=cx-r.left-el.offsetWidth/2;
+      const relY=cy-r.top-el.offsetHeight/2;
       pg.appendChild(el);
       activeDrag.wrap=pg;
-      activeDrag.origLeft=Math.max(0,Math.min(pg.offsetWidth-el.offsetWidth,relX));
-      activeDrag.origTop=Math.max(0,Math.min(pg.offsetHeight-el.offsetHeight,relY));
-      activeDrag.startX=mouseEvent.clientX;
-      activeDrag.startY=mouseEvent.clientY;
-      el.style.left=activeDrag.origLeft+'px';
-      el.style.top=activeDrag.origTop+'px';
+      activeDrag.ox=Math.max(0,Math.min(pg.offsetWidth-el.offsetWidth,relX));
+      activeDrag.oy=Math.max(0,Math.min(pg.offsetHeight-el.offsetHeight,relY));
+      activeDrag.sx=cx;activeDrag.sy=cy;
+      el.style.left=activeDrag.ox+'px';el.style.top=activeDrag.oy+'px';
       updateSigPos(el,pg,+pg.dataset.pageIndex);
     }
   });
+  updateSigPos(el,activeDrag.wrap,+activeDrag.wrap.dataset.pageIndex);
+}
+
+function doResize(cx,cy){
+  const {el,sx,sy,ow,oh}=activeResize;
+  const newW=Math.max(50,Math.min(350,ow+(cx-sx)));
+  const newH=Math.round(newW/getSigAspect());
+  el.style.width=newW+'px';el.style.height=newH+'px';
+  document.getElementById('sigSizeRange').value=newW;
+  document.getElementById('sigSizeLabel').textContent=newW;
+  const wrap=el.parentElement;
+  if(wrap)updateSigPos(el,wrap,+wrap.dataset.pageIndex);
 }
 
 function getSigAspect(){
-  if(S.sigData){
-    const img=document.getElementById('sprev').querySelector('img');
-    if(img&&img.naturalWidth) return img.naturalWidth/img.naturalHeight;
-  }
-  return 3; // default aspect ratio
+  if(S.sigData){const img=document.getElementById('sprev').querySelector('img');if(img&&img.naturalWidth)return img.naturalWidth/img.naturalHeight}
+  return 3;
 }
-
-function updateSigPos(el, wrap, pageIndex){
-  const pW=wrap.offsetWidth, pH=wrap.offsetHeight;
-  const elL=parseInt(el.style.left), elT=parseInt(el.style.top);
-  const elW=el.offsetWidth, elH=el.offsetHeight;
-
-  // Convertir de coordenadas de pantalla a coordenadas PDF reales
-  // PDF.js renderizó a scale 1.3, así que dividimos
-  const renderScale=1.3;
+function updateSigPos(el,wrap,pi){
+  const pW=wrap.offsetWidth,pH=wrap.offsetHeight;
+  const elL=parseInt(el.style.left),elT=parseInt(el.style.top);
+  const elW=el.offsetWidth,elH=el.offsetHeight;
   const pdfX=(elL/pW)*sigPos.pdfW;
-  const pdfY=((pH-elT-elH)/pH)*sigPos.pdfH; // invertir Y (PDF 0,0 = abajo izq)
-  const pdfW_sig=(elW/pW)*sigPos.pdfW;
-  const pdfH_sig=(elH/pH)*sigPos.pdfH;
-
-  sigPos={...sigPos, page:pageIndex, x:pdfX, y:pdfY, w:pdfW_sig, h:pdfH_sig, pdfW:sigPos.pdfW, pdfH:sigPos.pdfH, set:true};
-
-  document.getElementById('posInfo').textContent=
-    `Página ${pageIndex+1} · X:${Math.round(pdfX)} Y:${Math.round(pdfY)} · ${Math.round(pdfW_sig)}×${Math.round(pdfH_sig)} pts`;
+  const pdfY=((pH-elT-elH)/pH)*sigPos.pdfH;
+  const pdfW2=(elW/pW)*sigPos.pdfW;
+  const pdfH2=(elH/pH)*sigPos.pdfH;
+  sigPos={...sigPos,page:pi,x:pdfX,y:pdfY,w:pdfW2,h:pdfH2,set:true};
+  document.getElementById('posInfo').textContent='Página '+(pi+1)+' · X:'+Math.round(pdfX)+' Y:'+Math.round(pdfY)+' · '+Math.round(pdfW2)+'×'+Math.round(pdfH2)+' pts';
 }
-
 function resizeSigOverlay(val){
-  document.getElementById('sigSizeLabel').textContent=val+'px';
-  const el=document.getElementById('sigOverlay');
-  if(!el)return;
-  const aspect=getSigAspect();
-  el.style.width=val+'px';
-  el.style.height=Math.round(val/aspect)+'px';
-  const wrap=el.parentElement;
-  if(wrap) updateSigPos(el,wrap,+wrap.dataset.pageIndex);
+  document.getElementById('sigSizeLabel').textContent=val;
+  const el=document.getElementById('sigOverlay');if(!el)return;
+  const H=Math.round(val/getSigAspect());
+  el.style.width=val+'px';el.style.height=H+'px';
+  const wrap=el.parentElement;if(wrap)updateSigPos(el,wrap,+wrap.dataset.pageIndex);
 }
-
 function resetSigPos(){
-  const el=document.getElementById('sigOverlay');
-  if(!el)return;
-  const wrap=el.parentElement;
-  if(!wrap)return;
+  const el=document.getElementById('sigOverlay');if(!el)return;
+  const wrap=el.parentElement;if(!wrap)return;
   const W=+document.getElementById('sigSizeRange').value;
   const H=Math.round(W/getSigAspect());
-  el.style.left=(wrap.offsetWidth-W-30)+'px';
-  el.style.top=(wrap.offsetHeight-H-30)+'px';
+  el.style.left=(wrap.offsetWidth-W-20)+'px';
+  el.style.top=(wrap.offsetHeight-H-20)+'px';
   el.style.width=W+'px';el.style.height=H+'px';
   updateSigPos(el,wrap,+wrap.dataset.pageIndex);
 }
 
-// ─────────────────────────────────────────────────────────────────
-// PASO 4 — Firmar
-// ─────────────────────────────────────────────────────────────────
-function buildSignSummary(){
-  if(S.file) document.getElementById('dsum').innerHTML=`<div style="display:flex;align-items:center;gap:8px"><span style="font-size:19px">📄</span><div><div style="font-weight:500">${S.file.name}</div><div style="font-size:11px;color:var(--g400)">${(S.file.size/1024).toFixed(1)} KB</div></div></div>`;
+// ── PASO 4 ──────────────────────────────────────────────────
+function buildSummary(){
+  if(S.file)document.getElementById('dsum').innerHTML='<div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">📕</span><div><div style="font-weight:500">'+S.file.name+'</div><div style="font-size:11px;color:var(--g400)">'+(S.file.size/1024).toFixed(1)+' KB</div></div></div>';
   if(sigPos.set){
     const n=document.getElementById('sname').value,r=document.getElementById('srole').value;
-    document.getElementById('possum').innerHTML=`
-      <div style="font-size:12px;color:var(--g600);line-height:1.8">
-        <div>📄 Página ${sigPos.page+1}</div>
-        <div>📍 X:${Math.round(sigPos.x)} · Y:${Math.round(sigPos.y)}</div>
-        <div>📐 ${Math.round(sigPos.w)}×${Math.round(sigPos.h)} pts</div>
-        <div style="margin-top:4px">👤 ${n||'—'}${r?' · '+r:''}</div>
-      </div>`;
-  } else {
-    document.getElementById('possum').innerHTML='<span style="color:var(--amber)">⚠️ Posición no establecida</span>';
-  }
+    document.getElementById('possum').innerHTML='<div style="font-size:12px;color:var(--g600);line-height:1.8"><div>📄 Página '+(sigPos.page+1)+'</div><div>📍 X:'+Math.round(sigPos.x)+' Y:'+Math.round(sigPos.y)+'</div><div style="margin-top:3px">👤 '+(n||'—')+(r?' · '+r:'')+'</div></div>';
+  }else{document.getElementById('possum').innerHTML='<span style="color:var(--amber)">⚠️ Posición no establecida</span>'}
 }
-
 function addLog(msg,t=''){
   const el=document.getElementById('log');
-  const ts=new Date().toLocaleTimeString('es-EC');
-  el.innerHTML+=`<span class="${t==='e'?'e':t==='i'?'i':''}">[${ts}] ${msg}</span><br>`;
+  el.innerHTML+='<span class="'+(t==='e'?'e':t==='i'?'i':'')+'">['+new Date().toLocaleTimeString('es-EC')+'] '+msg+'</span><br>';
   el.scrollTop=el.scrollHeight;
 }
-
 async function loadPdfLib(){
   if(window.PDFLib)return window.PDFLib;
   return new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';s.onload=()=>res(window.PDFLib);s.onerror=rej;document.head.appendChild(s)});
 }
-
 async function doSign(){
-  if(!S.file){alert('Carga un archivo.');return}
+  if(!S.file||!S.bytes){alert('Carga un archivo.');return}
   if(S.sigMode==='img'&&!S.sigData){alert('Guarda una firma.');return}
   if(S.sigMode==='cert'&&!S.certFile){alert('Carga un certificado.');return}
   const btn=document.getElementById('bsign'),pw=document.getElementById('spw'),res=document.getElementById('sres');
@@ -960,101 +977,46 @@ async function doSign(){
   addLog('▶️ Firmando...','i');
   try{
     await new Promise(r=>setTimeout(r,150));
-    const ext=S.file.name.split('.').pop().toLowerCase();
-    // Copiar el buffer para evitar el error "detached ArrayBuffer"
-    const bytesCopy = S.bytes.slice(0);
-    const bytes=new Uint8Array(bytesCopy);
+    const bytes=new Uint8Array(S.bytes.slice(0));
     const n=document.getElementById('sname').value,r=document.getElementById('srole').value;
     const incTs=document.getElementById('sts').value==='1';
     const ts=new Date().toLocaleString('es-EC');
     let signed;
-
-    if(ext==='pdf'){
-      if(S.sigMode==='img') signed=await signPdfImg(bytes,S.sigData,n,r,incTs,ts);
-      else signed=await signPdfCert(bytes,n,r,ts);
-    } else if(ext==='docx'||ext==='doc'){
-      signed=await signDocxImg(bytes,n,r,ts);
-    } else {
-      signed=await signImgOverlay(bytes,S.sigData,n,r,ts);
-    }
-
+    if(S.sigMode==='img')signed=await signPdfImg(bytes,S.sigData,n,r,incTs,ts);
+    else signed=await signPdfCert(bytes,n,r,ts);
     S.signedBytes=signed;
-    S.signedName=S.file.name.replace(/(\.[^.]+)$/,'_firmado$1');
-    addLog(`✅ ${S.signedName} · ${(signed.length/1024).toFixed(1)} KB`);
-    res.style.display='block';
-    res.innerHTML='<div class="ib gr">✅ <strong>Documento firmado.</strong> Listo para subir o descargar.</div>';
-    document.getElementById('n4').disabled=false;
-    document.getElementById('bdl').disabled=false;
+    S.signedName=S.file.name.replace(/\.pdf$/i,'_firmado.pdf');
+    addLog('✅ '+S.signedName+' · '+(signed.length/1024).toFixed(1)+' KB');
+    res.style.display='block';res.innerHTML='<div class="ib gr">✅ <strong>Documento firmado.</strong> Listo para subir o descargar.</div>';
+    document.getElementById('n4').disabled=false;document.getElementById('bdl').disabled=false;
   }catch(e){
-    addLog(`❌ ${e.message}`,'e');
-    res.style.display='block';
-    res.innerHTML=`<div class="ib re">❌ ${e.message}</div>`;
-  }finally{ btn.disabled=false;btn.textContent='✍️ Firmar documento';pw.style.display='none'; }
+    addLog('❌ '+e.message,'e');res.style.display='block';res.innerHTML='<div class="ib re">❌ '+e.message+'</div>';
+  }finally{btn.disabled=false;btn.textContent='✍️ Firmar documento';pw.style.display='none'}
 }
-
 async function signPdfImg(bytes,url,n,r,incTs,ts){
   const PL=await loadPdfLib();
   const doc=await PL.PDFDocument.load(bytes);
-  const pages=doc.getPages();
-  const page=pages[sigPos.set ? sigPos.page : pages.length-1];
-  const {width,height}=page.getSize();
-
-  // Coordenadas finales — si el usuario posicionó, usamos sigPos; sino, esquina inf derecha
+  const page=doc.getPages()[sigPos.set?sigPos.page:doc.getPageCount()-1];
+  const{width,height}=page.getSize();
   let x,y,w,h;
-  if(sigPos.set){
-    x=sigPos.x; y=sigPos.y; w=sigPos.w; h=sigPos.h;
-    // Clamp por seguridad
-    x=Math.max(0,Math.min(width-w,x));
-    y=Math.max(0,Math.min(height-h,y));
-  } else {
-    w=160;h=60;x=width-w-28;y=28;
-  }
-
+  if(sigPos.set){x=sigPos.x;y=sigPos.y;w=sigPos.w;h=sigPos.h;x=Math.max(0,Math.min(width-w,x));y=Math.max(0,Math.min(height-h,y))}
+  else{w=150;h=55;x=width-w-25;y=25}
   const sb=Uint8Array.from(atob(url.split(',')[1]),c=>c.charCodeAt(0));
   const si=await doc.embedPng(sb);
   page.drawImage(si,{x,y,width:w,height:h,opacity:.93});
-
   if(incTs){
     const f=await doc.embedFont(PL.StandardFonts.Helvetica);
-    const label=`${n||''}${r?' — '+r:''} · ${ts}`;
-    const labelY=y>14 ? y-12 : y+h+3;
-    page.drawText(label,{x,y:labelY,size:7,font:f,color:PL.rgb(.4,.4,.4)});
+    const lbl=(n||'')+(r?' — '+r:'')+' · '+ts;
+    const ly2=y>14?y-12:y+h+3;
+    page.drawText(lbl,{x,y:ly2,size:7,font:f,color:PL.rgb(.4,.4,.4)});
   }
   return await doc.save();
 }
-
-async function signDocxImg(bytes,n,r,ts){
-  if(!window.JSZip)await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s)});
-  const zip=await JSZip.loadAsync(bytes);
-  zip.file('firma_sanmateo.txt',`Firmado por: ${n||'—'}\nCargo: ${r||'—'}\nFecha: ${ts}`);
-  return await zip.generateAsync({type:'uint8array'});
-}
-
-async function signImgOverlay(bytes,url,n,r,ts){
-  return new Promise(res=>{
-    const img=new Image(),blob=new Blob([bytes]),burl=URL.createObjectURL(blob);
-    img.onload=()=>{
-      const c=document.createElement('canvas');c.width=img.width;c.height=img.height;
-      const cx=c.getContext('2d');cx.drawImage(img,0,0);
-      const si=new Image();
-      si.onload=()=>{
-        const sw2=img.width*.22,sh2=sw2*si.height/si.width;
-        const sx=img.width-sw2-18,sy=img.height-sh2-18;
-        cx.globalAlpha=.88;cx.drawImage(si,sx,sy,sw2,sh2);cx.globalAlpha=1;
-        cx.font=`${Math.max(10,img.width*.011)}px Arial`;cx.fillStyle='rgba(40,40,40,.75)';
-        cx.fillText(`${n||''} · ${ts}`,sx,sy-5);
-        c.toBlob(b=>{b.arrayBuffer().then(buf=>res(new Uint8Array(buf)))},'image/jpeg',.93);
-      };si.src=url;URL.revokeObjectURL(burl);
-    };img.src=burl;
-  });
-}
-
 async function signPdfCert(bytes,n,r,ts){
   const PL=await loadPdfLib();
   const doc=await PL.PDFDocument.load(bytes);
   const font=await doc.embedFont(PL.StandardFonts.Helvetica);
-  const pages=doc.getPages();
-  const page=pages[sigPos.set?sigPos.page:pages.length-1];
+  const page=doc.getPages()[sigPos.set?sigPos.page:doc.getPageCount()-1];
   const{width}=page.getSize();
   const reason=document.getElementById('creason').value||'Firma digital';
   let bx=sigPos.set?sigPos.x:width-215, by=sigPos.set?sigPos.y:18;
@@ -1065,77 +1027,164 @@ async function signPdfCert(bytes,n,r,ts){
   page.drawText(r||'—',{x:bx+5,y:by+33,size:7,font,color:PL.rgb(.35,.35,.35)});
   page.drawText(reason,{x:bx+5,y:by+21,size:7,font,color:PL.rgb(.35,.35,.35)});
   page.drawText(ts,{x:bx+5,y:by+9,size:7,font,color:PL.rgb(.35,.35,.35)});
-  doc.setAuthor(n||'FirmaDoc');doc.setSubject(reason);
+  doc.setAuthor(n||'SanMateo eSign');doc.setSubject(reason);
   return await doc.save();
 }
 
-// ─────────────────────────────────────────────────────────────────
-// PASO 5 — SharePoint
-// ─────────────────────────────────────────────────────────────────
-function buildLibList(names){
-  document.getElementById('libNoteT').textContent=`${names.length} biblioteca(s) disponibles según tus permisos.`;
-  const list=document.getElementById('liblist');list.innerHTML='';
-  names.forEach((name,i)=>{
-    const lbl=document.createElement('label');
-    lbl.className='libitem'+(i===0?' sel':'');
-    lbl.innerHTML=`<input type="radio" name="lib" value="${name}" ${i===0?'checked':''}><div style="flex:1"><div class="libname">📚 ${name}</div><div class="libsite">${CFG.spSiteUrl}</div></div>`;
-    lbl.querySelector('input').addEventListener('change',()=>{document.querySelectorAll('.libitem').forEach(l=>l.classList.remove('sel'));lbl.classList.add('sel')});
-    list.appendChild(lbl);
-  });
+// ── PASO 5: SharePoint con navegador de carpetas ────────────
+async function onDriveChange(){
+  const sel=document.getElementById('driveSelect');
+  currentDriveId=sel.value;
+  currentFolderPath='';currentFolderId='root';
+  if(!currentDriveId){document.getElementById('folderBrowser').style.display='none';return}
+  document.getElementById('folderBrowser').style.display='block';
+  await loadFolders('root','');
+}
+
+async function loadFolders(folderId,folderPath){
+  currentFolderId=folderId;currentFolderPath=folderPath;
+  updateFbPath(folderPath);
+  const list=document.getElementById('fbList');
+  list.innerHTML='<div style="font-size:12px;color:var(--g400);padding:8px">Cargando...</div>';
+  try{
+    const url=folderId==='root'
+      ?`https://graph.microsoft.com/v1.0/drives/${currentDriveId}/root/children`
+      :`https://graph.microsoft.com/v1.0/drives/${currentDriveId}/items/${folderId}/children`;
+    const r=await fetch(url+'?$select=id,name,folder&$orderby=name',{headers:{Authorization:`Bearer ${spToken}`}});
+    if(!r.ok)throw new Error('Error al cargar carpetas');
+    const d=await r.json();
+    const folders=(d.value||[]).filter(i=>i.folder);
+    list.innerHTML='';
+    if(folderId!=='root'){
+      const back=document.createElement('div');
+      back.className='fb-item';
+      back.innerHTML='<span class="fb-folder">⬆️</span><span class="fb-name">.. Subir nivel</span>';
+      back.onclick=()=>{
+        const parts=folderPath.split('/').filter(Boolean);
+        parts.pop();
+        const parentPath=parts.join('/');
+        // Para subir necesitamos el ID del padre — simplificamos recargando desde la ruta
+        goFolderUp(folderPath);
+      };
+      list.appendChild(back);
+    }
+    if(!folders.length&&folderId==='root'){
+      list.innerHTML+='<div style="font-size:12px;color:var(--g400);padding:8px;text-align:center">Sin subcarpetas en esta biblioteca</div>';
+    }
+    folders.forEach(f=>{
+      const item=document.createElement('div');
+      item.className='fb-item';
+      item.innerHTML='<span class="fb-folder">📁</span><div style="flex:1"><div class="fb-name">'+f.name+'</div></div><span style="font-size:11px;color:var(--g400)">Abrir →</span>';
+      item.onclick=()=>loadFolders(f.id,(folderPath?folderPath+'/':'')+f.name);
+      list.appendChild(item);
+    });
+    // Actualizar carpeta actual
+    document.getElementById('fbCurrentText').textContent=folderPath||'Raíz de la biblioteca';
+  }catch(e){list.innerHTML='<div class="ib re" style="margin:4px"><span>❌</span><span>'+e.message+'</span></div>'}
+}
+
+async function goFolderUp(currentPath){
+  const parts=currentPath.split('/').filter(Boolean);
+  parts.pop();
+  if(!parts.length){await loadFolders('root','');return}
+  // Navegar reconstruyendo el path
+  try{
+    let fid='root';
+    for(const part of parts){
+      const r=await fetch(`https://graph.microsoft.com/v1.0/drives/${currentDriveId}/items/${fid}/children?$filter=name eq '${encodeURIComponent(part)}'&$select=id,name,folder`,{headers:{Authorization:`Bearer ${spToken}`}});
+      const d=await r.json();
+      const found=(d.value||[]).find(i=>i.name===part&&i.folder);
+      if(found)fid=found.id;
+    }
+    await loadFolders(fid,parts.join('/'));
+  }catch{await loadFolders('root','')}
+}
+
+function updateFbPath(path){
+  const el=document.getElementById('fbPath');
+  el.innerHTML='';
+  const root=document.createElement('span');
+  root.className='fb-crumb';root.textContent='Raíz';
+  root.onclick=()=>loadFolders('root','');
+  el.appendChild(root);
+  if(path){
+    const parts=path.split('/').filter(Boolean);
+    parts.forEach((part,i)=>{
+      const sep=document.createElement('span');sep.className='fb-sep';sep.textContent=' / ';el.appendChild(sep);
+      const crumb=document.createElement('span');crumb.className='fb-crumb';crumb.textContent=part;
+      const partPath=parts.slice(0,i+1).join('/');
+      crumb.onclick=async()=>{
+        // Navegar a esta parte del path
+        let fid='root';
+        try{
+          for(const p of parts.slice(0,i+1)){
+            const r=await fetch(`https://graph.microsoft.com/v1.0/drives/${currentDriveId}/items/${fid}/children?$filter=name eq '${encodeURIComponent(p)}'&$select=id,name,folder`,{headers:{Authorization:`Bearer ${spToken}`}});
+            const d=await r.json();
+            const found=(d.value||[]).find(x=>x.name===p&&x.folder);
+            if(found)fid=found.id;
+          }
+        }catch{}
+        await loadFolders(fid,partPath);
+      };
+      el.appendChild(crumb);
+    });
+  }
+}
+
+async function createFolder(){
+  const name=document.getElementById('newFolderName').value.trim();
+  if(!name){alert('Escribe el nombre de la carpeta.');return}
+  if(!currentDriveId){alert('Selecciona una biblioteca primero.');return}
+  try{
+    const parentId=currentFolderId==='root'?'root':currentFolderId;
+    const url=parentId==='root'
+      ?`https://graph.microsoft.com/v1.0/drives/${currentDriveId}/root/children`
+      :`https://graph.microsoft.com/v1.0/drives/${currentDriveId}/items/${parentId}/children`;
+    const r=await fetch(url,{
+      method:'POST',
+      headers:{Authorization:`Bearer ${spToken}`,'Content-Type':'application/json'},
+      body:JSON.stringify({name,folder:{},['@microsoft.graph.conflictBehavior']:'rename'})
+    });
+    if(!r.ok)throw new Error('No se pudo crear la carpeta');
+    const d=await r.json();
+    document.getElementById('newFolderName').value='';
+    addLog('📁 Carpeta creada: '+name,'i');
+    await loadFolders(currentFolderId,currentFolderPath);
+  }catch(e){alert('Error: '+e.message)}
 }
 
 function doDownload(){
   if(!S.signedBytes)return;
-  const ext=(S.signedName||'').split('.').pop().toLowerCase();
-  const mime=ext==='pdf'?'application/pdf':ext==='docx'?'application/vnd.openxmlformats-officedocument.wordprocessingml.document':'image/jpeg';
-  const url=URL.createObjectURL(new Blob([S.signedBytes],{type:mime}));
+  const url=URL.createObjectURL(new Blob([S.signedBytes],{type:'application/pdf'}));
   const a=document.createElement('a');a.href=url;a.download=S.signedName;a.click();URL.revokeObjectURL(url);
-  addLog(`⬇️ ${S.signedName}`);
+  addLog('⬇️ '+S.signedName);
 }
 
 async function doUpload(){
-  if(!S.signedBytes){alert('Firma primero.');return}
-  if(!spToken){alert('Sin token. Recarga.');return}
-  const lr=document.querySelector('input[name="lib"]:checked');
-  if(!lr){alert('Selecciona biblioteca.');return}
-  const driveId=drives[lr.value];
-  const folder=document.getElementById('sfolder').value.trim();
+  if(!S.signedBytes){alert('Firma primero el documento.');return}
+  if(!spToken){alert('Sin token. Recarga la página.');return}
+  if(!currentDriveId){alert('Selecciona una biblioteca.');return}
   const fname=document.getElementById('sfname').value.trim()||S.signedName;
   const btn=document.getElementById('bup'),pw=document.getElementById('uppw'),res=document.getElementById('upres');
   btn.disabled=true;btn.textContent='Subiendo...';pw.style.display='block';res.style.display='none';
-  addLog(`☁️ ${lr.value}${folder?'/'+folder:''}...`,'i');
+  const destLabel=(currentFolderPath||'Raíz')+'/'+fname;
+  addLog('☁️ Subiendo → '+destLabel,'i');
   try{
     const enc=encodeURIComponent(fname);
-    const path=folder?folder.split('/').map(encodeURIComponent).join('/')+'/'+enc:enc;
-    const rr=await fetch(`https://graph.microsoft.com/v1.0/drives/${driveId}/root:/${path}:/content`,{method:'PUT',headers:{Authorization:`Bearer ${spToken}`,'Content-Type':'application/octet-stream'},body:S.signedBytes});
-    if(!rr.ok){const err=await rr.json();throw new Error(err.error?.message||`Error ${rr.status}`)}
+    let uploadUrl;
+    if(currentFolderId==='root'){
+      uploadUrl=`https://graph.microsoft.com/v1.0/drives/${currentDriveId}/root:/${enc}:/content`;
+    }else{
+      uploadUrl=`https://graph.microsoft.com/v1.0/drives/${currentDriveId}/items/${currentFolderId}:/${enc}:/content`;
+    }
+    const rr=await fetch(uploadUrl,{method:'PUT',headers:{Authorization:`Bearer ${spToken}`,'Content-Type':'application/octet-stream'},body:S.signedBytes});
+    if(!rr.ok){const err=await rr.json();throw new Error(err.error?.message||'Error '+rr.status)}
     const data=await rr.json();
     res.style.display='block';
-    res.innerHTML=`<div class="ib gr">✅ <strong>${lr.value}${folder?'/'+folder:''}</strong>${data.webUrl?`<br><a href="${data.webUrl}" target="_blank" style="color:var(--green);font-size:12px;margin-top:3px;display:inline-block">📎 Ver en SharePoint →</a>`:''}</div>`;
-    addLog(`✅ ${fname} → ${lr.value}`);
+    res.innerHTML='<div class="ib gr">✅ <strong>Subido a '+destLabel+'</strong>'+(data.webUrl?'<br><a href="'+data.webUrl+'" target="_blank" style="color:var(--green);font-size:12px;margin-top:3px;display:inline-block">📎 Ver en SharePoint →</a>':'')+'</div>';
+    addLog('✅ '+fname+' → '+destLabel);
   }catch(e){
-    res.style.display='block';res.innerHTML=`<div class="ib re">❌ ${e.message}</div>`;addLog(`❌ ${e.message}`,'e');
-  }finally{ btn.disabled=false;btn.textContent='☁️ Subir a SharePoint';pw.style.display='none'; }
+    res.style.display='block';res.innerHTML='<div class="ib re">❌ '+e.message+'</div>';addLog('❌ '+e.message,'e');
+  }finally{btn.disabled=false;btn.textContent='☁️ Subir a SharePoint';pw.style.display='none'}
 }
-
-// Punto de entrada: primero carga MSAL, luego inicializa
-(function(){
-  try{
-    msalApp = new msal.PublicClientApplication({
-      auth:{
-        clientId: CFG.clientId,
-        authority: 'https://login.microsoftonline.com/' + CFG.tenantId,
-        redirectUri: CFG.redirectUri
-      },
-      cache:{ cacheLocation:'sessionStorage', storeAuthStateInCookie:false }
-    });
-    init();
-  }catch(e){
-    document.getElementById('lerr').textContent = 'Error al inicializar: ' + e.message;
-    document.getElementById('lerr').style.display = 'block';
-    document.getElementById('btnLogin').disabled = false;
-  }
-})();
 </script>
-</body>
-</html>
