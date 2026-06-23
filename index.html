@@ -697,7 +697,8 @@ async function renderPDFPages(){
 
   try{
     const pdfjsLib=await loadPdfJs();
-    const bytes=new Uint8Array(S.bytes);
+    // Usar copia del buffer para no consumirlo — se necesita intacto para firmar después
+    const bytes=new Uint8Array(S.bytes.slice(0));
     const pdf=await pdfjsLib.getDocument({data:bytes}).promise;
     viewer.innerHTML='<p class="pdf-hint">Arrastra la firma 🖊 a la posición deseada en cualquier página</p>';
 
@@ -960,7 +961,9 @@ async function doSign(){
   try{
     await new Promise(r=>setTimeout(r,150));
     const ext=S.file.name.split('.').pop().toLowerCase();
-    const bytes=new Uint8Array(S.bytes);
+    // Copiar el buffer para evitar el error "detached ArrayBuffer"
+    const bytesCopy = S.bytes.slice(0);
+    const bytes=new Uint8Array(bytesCopy);
     const n=document.getElementById('sname').value,r=document.getElementById('srole').value;
     const incTs=document.getElementById('sts').value==='1';
     const ts=new Date().toLocaleString('es-EC');
