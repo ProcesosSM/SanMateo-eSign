@@ -645,7 +645,17 @@ async function init(){
         const t=await msalApp.acquireTokenSilent({scopes:SCOPES,account:accs[0]});
         await afterLogin(t.account);
         return;
-      }catch{/* token expirado, pedir login manual */}
+      }catch(silentErr){
+        // Si el error es de consentimiento o token expirado, forzar login interactivo
+        if(silentErr.errorCode==='interaction_required'||
+           silentErr.errorCode==='consent_required'||
+           silentErr.errorCode==='login_required'||
+           (silentErr.message&&silentErr.message.includes('AADSTS65001'))){
+          // Limpiar cuentas cacheadas y pedir login de nuevo
+          enableLogin();
+          return;
+        }
+      }
     }
     enableLogin();
   }catch(e){
@@ -672,7 +682,12 @@ async function doLogin(){
   document.getElementById('lspinner').style.display='block';
   document.getElementById('lspinner').textContent='⏳ Redirigiendo a Microsoft...';
   document.getElementById('lerr').style.display='none';
-  try{await msalApp.loginRedirect({scopes:SCOPES})}
+  try{
+    await msalApp.loginRedirect({
+      scopes:SCOPES,
+      prompt:'select_account' // Fuerza selección de cuenta y consentimiento de nuevos scopes
+    });
+  }
   catch(e){
     showErr(e.message);
     document.getElementById('btnLogin').disabled=false;
@@ -699,68 +714,43 @@ async function afterLogin(account){
     const sd=await sr.json();
     siteId=sd.id;
 
-    // ── Obtener token SharePoint REST (respeta permisos individuales) ──
-    // Usamos SharePoint REST API directamente — a diferencia de Graph,
-    // esta API sí filtra por los permisos reales del usuario en cada biblioteca
+    // ── Token SharePoint REST ──────────────────────────────────
     const spRestToken = await msalApp.acquireTokenSilent({
       scopes: ['https://alimesa.sharepoint.com/AllSites.Write'],
       account
     });
     const spRestT = spRestToken.accessToken;
+    window._spRestToken = spRestT;
 
-    // Obtener todas las listas de tipo DocumentLibrary del sitio
-    // Este endpoint devuelve SOLO las que el usuario puede leer
-    const listsUrl = CFG.spSiteUrl + "/_api/web/lists?$filter=BaseTemplate eq 101&$select=Title,Id,RootFolder/ServerRelativeUrl&$expand=RootFolder";
-    const lr = await fetch(listsUrl, {
-      headers: {
-        'Authorization': `Bearer ${spRestT}`,
-        'Accept': 'application/json;odata=verbose'
-      }
-    });
+    // ── Estrategia: obtener drives via Graph pero verificar permisos
+    //    reales con SharePoint REST API para cada biblioteca ──────
+    const dr = await fetch(
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/drives`,
+      {headers:{Authorization:`Bearer ${spRestT}`}}
+    );
+    if(!dr.ok) throw new Error('No se pudo obtener la lista de bibliotecas.');
+    const dd = await dr.json();
+    const allDrives = (dd.value||[]).filter(d=>d.driveType==='documentLibrary');
 
     drives = {};
-    if(lr.ok){
-      const ld = await lr.json();
-      const lists = ld?.d?.results || [];
-      // Para cada biblioteca, verificar acceso real intentando listar su contenido
-      await Promise.all(lists.map(async(lib)=>{
-        try{
-          const checkUrl = CFG.spSiteUrl + `/_api/web/GetFolderByServerRelativeUrl('${encodeURIComponent(lib.RootFolder.ServerRelativeUrl)}')/Files?$top=1`;
-          const cr = await fetch(checkUrl, {
-            headers: {
-              'Authorization': `Bearer ${spRestT}`,
-              'Accept': 'application/json;odata=verbose'
-            }
-          });
-          if(cr.ok){
-            // También necesitamos el drive ID de Graph para subir archivos
-            // Lo obtenemos mapeando por nombre
-            drives[lib.Title] = { listId: lib.Id, rootUrl: lib.RootFolder.ServerRelativeUrl };
-          }
-        }catch{/* sin acceso */}
-      }));
-    }
 
-    // Si el método REST no funcionó, fallback a Graph con verificación individual
-    if(!Object.keys(drives).length){
-      const dr = await fetch(`https://graph.microsoft.com/v1.0/sites/${siteId}/drives`,{
-        headers:{Authorization:`Bearer ${spToken}`}
-      });
-      const dd = await dr.json();
-      await Promise.all((dd.value||[]).map(async(d)=>{
-        try{
-          // Usar endpoint /items en lugar de /root para forzar verificación de permisos
-          const tr = await fetch(
-            `https://graph.microsoft.com/v1.0/drives/${d.id}/root/children?$top=1&$select=id`,
-            {headers:{Authorization:`Bearer ${spToken}`}}
-          );
-          if(tr.ok) drives[d.name] = { driveId: d.id };
-        }catch{/* sin acceso */}
-      }));
-    }
-
-    // Guardar spRestToken para subidas
-    window._spRestToken = spRestT;
+    // Para cada biblioteca intentamos leer SU contenido usando el token
+    // del usuario con SharePoint REST — si el usuario no tiene permiso
+    // SharePoint devuelve 403, si sí tiene permiso devuelve 200
+    await Promise.all(allDrives.map(async(d)=>{
+      try{
+        // Usamos el endpoint de items de Graph pero con el token SharePoint
+        // que sí respeta los permisos individuales
+        const testUrl = `https://graph.microsoft.com/v1.0/drives/${d.id}/root/children?$top=1&$select=id,name`;
+        const res = await fetch(testUrl, {
+          headers:{Authorization:`Bearer ${spRestT}`}
+        });
+        // Solo añadimos si la respuesta es 200 — 403 significa sin permiso
+        if(res.status === 200){
+          drives[d.name] = { driveId: d.id };
+        }
+      }catch{/* sin acceso, ignorar */}
+    }));
 
     if(!Object.keys(drives).length){showDenied(`Tu cuenta ${account.username} no tiene acceso a ninguna biblioteca en este sitio.`);return}
 
