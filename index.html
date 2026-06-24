@@ -604,11 +604,7 @@ const CFG = {
 // ═══════════════════════════════════════════════════════════
 
 let msalApp = null;
-const SCOPES = [
-  'User.Read',
-  'https://alimesa.sharepoint.com/AllSites.Write',
-  'https://alimesa.sharepoint.com/AllSites.Read'
-];
+const SCOPES = ['User.Read','Files.ReadWrite.All'];
 let spToken=null, siteId=null, drives={}, currentDriveId=null;
 let currentFolderPath='', currentFolderId='root';
 let S={ file:null, bytes:null, sigMode:'img', sigData:null, certFile:null, signedBytes:null, signedName:'' };
@@ -645,17 +641,7 @@ async function init(){
         const t=await msalApp.acquireTokenSilent({scopes:SCOPES,account:accs[0]});
         await afterLogin(t.account);
         return;
-      }catch(silentErr){
-        // Si el error es de consentimiento o token expirado, forzar login interactivo
-        if(silentErr.errorCode==='interaction_required'||
-           silentErr.errorCode==='consent_required'||
-           silentErr.errorCode==='login_required'||
-           (silentErr.message&&silentErr.message.includes('AADSTS65001'))){
-          // Limpiar cuentas cacheadas y pedir login de nuevo
-          enableLogin();
-          return;
-        }
-      }
+      }catch{/* token expirado, pedir login manual */}
     }
     enableLogin();
   }catch(e){
@@ -682,12 +668,7 @@ async function doLogin(){
   document.getElementById('lspinner').style.display='block';
   document.getElementById('lspinner').textContent='⏳ Redirigiendo a Microsoft...';
   document.getElementById('lerr').style.display='none';
-  try{
-    await msalApp.loginRedirect({
-      scopes:SCOPES,
-      prompt:'select_account' // Fuerza selección de cuenta y consentimiento de nuevos scopes
-    });
-  }
+  try{await msalApp.loginRedirect({scopes:SCOPES})}
   catch(e){
     showErr(e.message);
     document.getElementById('btnLogin').disabled=false;
@@ -707,73 +688,54 @@ async function afterLogin(account){
     const t=await msalApp.acquireTokenSilent({scopes:SCOPES,account});
     spToken=t.accessToken;
 
-    // Obtener site ID
+    // ── Obtener site ID para validar que el sitio es accesible ──
     const hp=CFG.spSiteUrl.replace('https://','').split('/');
     const sr=await fetch(`https://graph.microsoft.com/v1.0/sites/${hp[0]}:/${hp.slice(1).join('/')}`,{headers:{Authorization:`Bearer ${spToken}`}});
     if(!sr.ok)throw new Error('No se pudo acceder al sitio de SharePoint.');
     const sd=await sr.json();
     siteId=sd.id;
 
-    // ── Token SharePoint REST ──────────────────────────────────
-    const spRestToken = await msalApp.acquireTokenSilent({
-      scopes: ['https://alimesa.sharepoint.com/AllSites.Write'],
-      account
-    });
-    const spRestT = spRestToken.accessToken;
-    window._spRestToken = spRestT;
+    // ── Obtener SOLO las drives a las que el usuario tiene acceso real ──
+    // /me/drives devuelve únicamente las bibliotecas donde el usuario tiene permisos
+    // asignados directamente (no hereda el scope Sites.ReadWrite.All del admin)
+    drives={};
 
-    // ── Obtener bibliotecas usando SharePoint REST API ─────────
-    // Este endpoint usa el token del usuario y respeta sus permisos reales.
-    // Filtra BaseTemplate=101 (Document Library) y excluye bibliotecas del sistema.
-    const SYSTEM_LIBS = ['Documents','Site Assets','Site Pages','Style Library',
-      'Form Templates','Preservation Hold Library','Pages','Images',
-      'Documentos','Recursos del sitio','Páginas del sitio'];
+    // 1. Drives del usuario vía /me/drives (OneDrive + SharePoint con acceso real)
+    const mdr=await fetch('https://graph.microsoft.com/v1.0/me/drives',{headers:{Authorization:`Bearer ${spToken}`}});
+    const mdd=mdr.ok?(await mdr.json()).value||[]:[];
 
-    const listsUrl = `${CFG.spSiteUrl}/_api/web/lists` +
-      `?$filter=BaseTemplate eq 101 and Hidden eq false` +
-      `&$select=Title,Id,RootFolder/ServerRelativeUrl` +
-      `&$expand=RootFolder`;
+    // 2. Drives compartidas/seguidas vía /me/followedSites y luego sus drives
+    //    Esto captura bibliotecas de sitios SharePoint que el usuario sigue
+    const fsr=await fetch('https://graph.microsoft.com/v1.0/me/followedSites?$select=id',{headers:{Authorization:`Bearer ${spToken}`}});
+    const followedSiteIds=fsr.ok?((await fsr.json()).value||[]).map(s=>s.id):[];
 
-    const lr = await fetch(listsUrl, {
-      headers:{
-        'Authorization': `Bearer ${spRestT}`,
-        'Accept': 'application/json;odata=verbose'
-      }
-    });
+    // 3. Drives del sitio destino que el usuario pueda leer (verificación individual)
+    //    Para cada drive del sitio, probamos GET /drives/{id}/root con el token del usuario.
+    //    Sin Sites.ReadWrite.All en el scope, solo retorna 200 si el usuario tiene permiso real.
+    const sdr=await fetch(`https://graph.microsoft.com/v1.0/sites/${siteId}/drives?$select=id,name`,{headers:{Authorization:`Bearer ${spToken}`}});
+    const siteDrives=sdr.ok?(await sdr.json()).value||[]:[];
 
-    drives = {};
+    // Construcción del mapa de drives accesibles:
+    // Un drive se incluye si cumple AL MENOS UNA de estas condiciones:
+    //   a) Aparece en /me/drives (acceso directo confirmado por Graph)
+    //   b) Su sitio está en /me/followedSites
+    //   c) GET /drives/{id}/root retorna 200 con el token delegado (sin scope amplio)
+    const meDriveIds=new Set(mdd.map(d=>d.id));
 
-    if(lr.ok){
-      const ld = await lr.json();
-      const lists = (ld?.d?.results || [])
-        .filter(l => !SYSTEM_LIBS.includes(l.Title));
+    await Promise.all(siteDrives.map(async(d)=>{
+      // Condición a: en /me/drives
+      if(meDriveIds.has(d.id)){drives[d.name]=d.id;return}
+      // Condición b: sitio seguido
+      if(followedSiteIds.includes(siteId)){drives[d.name]=d.id;return}
+      // Condición c: prueba directa de lectura del root
+      try{
+        const tr=await fetch(`https://graph.microsoft.com/v1.0/drives/${d.id}/root?$select=id`,{headers:{Authorization:`Bearer ${spToken}`}});
+        if(tr.ok)drives[d.name]=d.id;
+        // 403/404 → sin acceso, no se agrega
+      }catch{/* error de red, ignorar */}
+    }));
 
-      // Verificar acceso real a cada biblioteca intentando leer su contenido
-      await Promise.all(lists.map(async(lib)=>{
-        try{
-          const testUrl = `${CFG.spSiteUrl}/_api/web/GetFolderByServerRelativeUrl` +
-            `('${lib.RootFolder.ServerRelativeUrl}')/Folders?$top=1&$select=Name`;
-          const tr = await fetch(testUrl, {
-            headers:{
-              'Authorization': `Bearer ${spRestT}`,
-              'Accept': 'application/json;odata=verbose'
-            }
-          });
-          if(tr.status === 200){
-            drives[lib.Title] = {
-              listId: lib.Id,
-              rootUrl: lib.RootFolder.ServerRelativeUrl,
-              driveId: null // se resuelve al seleccionar
-            };
-          }
-        }catch{/* sin acceso */}
-      }));
-    }
-
-    if(!Object.keys(drives).length){
-      showDenied(`Tu cuenta ${account.username} no tiene acceso a ninguna biblioteca en este sitio de SharePoint.`);
-      return;
-    }
+    if(!Object.keys(drives).length){showDenied(`Tu cuenta ${account.username} no tiene acceso a ninguna biblioteca en este sitio.`);return}
 
     // ── Sesión compartida entre pestañas via localStorage ──
     localStorage.setItem('sm_esign_account', JSON.stringify({
@@ -797,11 +759,11 @@ async function afterLogin(account){
     sel.innerHTML='<option value="">— Selecciona una biblioteca —</option>';
     Object.keys(drives).sort().forEach(name=>{
       const opt=document.createElement('option');
-      opt.value=name; opt.textContent='📚 '+name;
+      opt.value=drives[name];opt.textContent='📚 '+name;
       sel.appendChild(opt);
     });
     document.getElementById('libNoteT').textContent=
-      Object.keys(drives).length+' biblioteca(s) disponibles según tus permisos en SharePoint.';
+      Object.keys(drives).length+' biblioteca(s) accesibles con tu cuenta en SharePoint.';
     addLog('✅ Sesión: '+account.name+' ('+Object.keys(drives).length+' biblioteca(s))','i');
 
   }catch(e){
@@ -1161,64 +1123,51 @@ async function signPdfCert(bytes,n,r,ts){
 // ── PASO 5: SharePoint con navegador de carpetas ────────────
 async function onDriveChange(){
   const sel=document.getElementById('driveSelect');
-  const driveName=sel.value;
-  if(!driveName){document.getElementById('folderBrowser').style.display='none';return}
-
-  const driveInfo=drives[driveName];
-
-  // Resolver driveId via Graph si aún no lo tenemos
-  if(!driveInfo.driveId){
-    try{
-      const dr=await fetch(
-        `https://graph.microsoft.com/v1.0/sites/${siteId}/drives?$select=id,name`,
-        {headers:{Authorization:`Bearer ${window._spRestToken}`}}
-      );
-      const dd=await dr.json();
-      const found=(dd.value||[]).find(d=>d.name===driveName);
-      if(found) drives[driveName].driveId=found.id;
-    }catch{/* continuar sin driveId, usaremos REST para subir */}
-  }
-
-  currentDriveId=drives[driveName].driveId;
-  currentFolderPath='';
-  currentFolderId='root';
+  currentDriveId=sel.value;
+  currentFolderPath='';currentFolderId='root';
+  if(!currentDriveId){document.getElementById('folderBrowser').style.display='none';return}
   document.getElementById('folderBrowser').style.display='block';
   await loadFolders('root','');
 }
 
-async function loadFolders(folderId, folderPath){
-  currentFolderId=folderId; currentFolderPath=folderPath;
+async function loadFolders(folderId,folderPath){
+  currentFolderId=folderId;currentFolderPath=folderPath;
   updateFbPath(folderPath);
   const list=document.getElementById('fbList');
   list.innerHTML='<div style="font-size:12px;color:var(--g400);padding:8px">Cargando...</div>';
   try{
-    const driveName=document.getElementById('driveSelect').value;
-    const driveInfo=drives[driveName];
-    const baseUrl=driveInfo.rootUrl;
-    const folderServerUrl = folderPath ? `${baseUrl}/${folderPath}` : baseUrl;
-    const url=`${CFG.spSiteUrl}/_api/web/GetFolderByServerRelativeUrl('${encodeURIComponent(folderServerUrl)}')/Folders?$select=Name,ServerRelativeUrl&$orderby=Name`;
-    const r=await fetch(url,{headers:{'Authorization':`Bearer ${window._spRestToken}`,'Accept':'application/json;odata=verbose'}});
-    if(!r.ok) throw new Error('Error al cargar carpetas ('+r.status+')');
+    const url=folderId==='root'
+      ?`https://graph.microsoft.com/v1.0/drives/${currentDriveId}/root/children`
+      :`https://graph.microsoft.com/v1.0/drives/${currentDriveId}/items/${folderId}/children`;
+    const r=await fetch(url+'?$select=id,name,folder&$orderby=name',{headers:{Authorization:`Bearer ${spToken}`}});
+    if(!r.ok)throw new Error('Error al cargar carpetas');
     const d=await r.json();
-    const folders=(d?.d?.results||[]).filter(f=>f.Name!=='Forms');
+    const folders=(d.value||[]).filter(i=>i.folder);
     list.innerHTML='';
-    if(folderPath){
+    if(folderId!=='root'){
       const back=document.createElement('div');
       back.className='fb-item';
       back.innerHTML='<span class="fb-folder">⬆️</span><span class="fb-name">.. Subir nivel</span>';
-      back.onclick=()=>goFolderUp(folderPath);
+      back.onclick=()=>{
+        const parts=folderPath.split('/').filter(Boolean);
+        parts.pop();
+        const parentPath=parts.join('/');
+        // Para subir necesitamos el ID del padre — simplificamos recargando desde la ruta
+        goFolderUp(folderPath);
+      };
       list.appendChild(back);
     }
-    if(!folders.length){
-      list.innerHTML+='<div style="font-size:12px;color:var(--g400);padding:8px;text-align:center">Sin subcarpetas</div>';
+    if(!folders.length&&folderId==='root'){
+      list.innerHTML+='<div style="font-size:12px;color:var(--g400);padding:8px;text-align:center">Sin subcarpetas en esta biblioteca</div>';
     }
     folders.forEach(f=>{
       const item=document.createElement('div');
       item.className='fb-item';
-      item.innerHTML='<span class="fb-folder">📁</span><div style="flex:1"><div class="fb-name">'+f.Name+'</div></div><span style="font-size:11px;color:var(--g400)">Abrir →</span>';
-      item.onclick=()=>loadFolders(f.ServerRelativeUrl,(folderPath?folderPath+'/':'')+f.Name);
+      item.innerHTML='<span class="fb-folder">📁</span><div style="flex:1"><div class="fb-name">'+f.name+'</div></div><span style="font-size:11px;color:var(--g400)">Abrir →</span>';
+      item.onclick=()=>loadFolders(f.id,(folderPath?folderPath+'/':'')+f.name);
       list.appendChild(item);
     });
+    // Actualizar carpeta actual
     document.getElementById('fbCurrentText').textContent=folderPath||'Raíz de la biblioteca';
   }catch(e){list.innerHTML='<div class="ib re" style="margin:4px"><span>❌</span><span>'+e.message+'</span></div>'}
 }
@@ -1226,7 +1175,18 @@ async function loadFolders(folderId, folderPath){
 async function goFolderUp(currentPath){
   const parts=currentPath.split('/').filter(Boolean);
   parts.pop();
-  await loadFolders(parts.join('/')||'root', parts.join('/'));
+  if(!parts.length){await loadFolders('root','');return}
+  // Navegar reconstruyendo el path
+  try{
+    let fid='root';
+    for(const part of parts){
+      const r=await fetch(`https://graph.microsoft.com/v1.0/drives/${currentDriveId}/items/${fid}/children?$filter=name eq '${encodeURIComponent(part)}'&$select=id,name,folder`,{headers:{Authorization:`Bearer ${spToken}`}});
+      const d=await r.json();
+      const found=(d.value||[]).find(i=>i.name===part&&i.folder);
+      if(found)fid=found.id;
+    }
+    await loadFolders(fid,parts.join('/'));
+  }catch{await loadFolders('root','')}
 }
 
 function updateFbPath(path){
@@ -1242,7 +1202,19 @@ function updateFbPath(path){
       const sep=document.createElement('span');sep.className='fb-sep';sep.textContent=' / ';el.appendChild(sep);
       const crumb=document.createElement('span');crumb.className='fb-crumb';crumb.textContent=part;
       const partPath=parts.slice(0,i+1).join('/');
-      crumb.onclick=()=>loadFolders(partPath,partPath);
+      crumb.onclick=async()=>{
+        // Navegar a esta parte del path
+        let fid='root';
+        try{
+          for(const p of parts.slice(0,i+1)){
+            const r=await fetch(`https://graph.microsoft.com/v1.0/drives/${currentDriveId}/items/${fid}/children?$filter=name eq '${encodeURIComponent(p)}'&$select=id,name,folder`,{headers:{Authorization:`Bearer ${spToken}`}});
+            const d=await r.json();
+            const found=(d.value||[]).find(x=>x.name===p&&x.folder);
+            if(found)fid=found.id;
+          }
+        }catch{}
+        await loadFolders(fid,partPath);
+      };
       el.appendChild(crumb);
     });
   }
@@ -1251,26 +1223,22 @@ function updateFbPath(path){
 async function createFolder(){
   const name=document.getElementById('newFolderName').value.trim();
   if(!name){alert('Escribe el nombre de la carpeta.');return}
-  const driveName=document.getElementById('driveSelect').value;
-  if(!driveName){alert('Selecciona una biblioteca primero.');return}
+  if(!currentDriveId){alert('Selecciona una biblioteca primero.');return}
   try{
-    const driveInfo=drives[driveName];
-    const baseUrl=driveInfo.rootUrl;
-    const parentUrl = currentFolderPath ? `${baseUrl}/${currentFolderPath}` : baseUrl;
-    const url=`${CFG.spSiteUrl}/_api/web/GetFolderByServerRelativeUrl('${encodeURIComponent(parentUrl)}')/Folders/add('${encodeURIComponent(name)}')`;
+    const parentId=currentFolderId==='root'?'root':currentFolderId;
+    const url=parentId==='root'
+      ?`https://graph.microsoft.com/v1.0/drives/${currentDriveId}/root/children`
+      :`https://graph.microsoft.com/v1.0/drives/${currentDriveId}/items/${parentId}/children`;
     const r=await fetch(url,{
       method:'POST',
-      headers:{
-        'Authorization':`Bearer ${window._spRestToken}`,
-        'Accept':'application/json;odata=verbose',
-        'Content-Type':'application/json;odata=verbose',
-        'X-RequestDigest':'0x0'
-      }
+      headers:{Authorization:`Bearer ${spToken}`,'Content-Type':'application/json'},
+      body:JSON.stringify({name,folder:{},['@microsoft.graph.conflictBehavior']:'rename'})
     });
-    if(!r.ok) throw new Error('No se pudo crear la carpeta ('+r.status+')');
+    if(!r.ok)throw new Error('No se pudo crear la carpeta');
+    const d=await r.json();
     document.getElementById('newFolderName').value='';
     addLog('📁 Carpeta creada: '+name,'i');
-    await loadFolders(currentFolderId, currentFolderPath);
+    await loadFolders(currentFolderId,currentFolderPath);
   }catch(e){alert('Error: '+e.message)}
 }
 
@@ -1283,40 +1251,26 @@ function doDownload(){
 
 async function doUpload(){
   if(!S.signedBytes){alert('Firma primero el documento.');return}
-  if(!window._spRestToken){alert('Sin token. Recarga la página.');return}
-  const driveName=document.getElementById('driveSelect').value;
-  if(!driveName){alert('Selecciona una biblioteca.');return}
+  if(!spToken){alert('Sin token. Recarga la página.');return}
+  if(!currentDriveId){alert('Selecciona una biblioteca.');return}
   const fname=document.getElementById('sfname').value.trim()||S.signedName;
   const btn=document.getElementById('bup'),pw=document.getElementById('uppw'),res=document.getElementById('upres');
   btn.disabled=true;btn.textContent='Subiendo...';pw.style.display='block';res.style.display='none';
   const destLabel=(currentFolderPath||'Raíz')+'/'+fname;
   addLog('☁️ Subiendo → '+destLabel,'i');
   try{
-    const driveInfo=drives[driveName];
-    const baseUrl=driveInfo.rootUrl;
-    const folderUrl = currentFolderPath ? `${baseUrl}/${currentFolderPath}` : baseUrl;
-    // Subir via SharePoint REST API
-    const uploadUrl=`${CFG.spSiteUrl}/_api/web/GetFolderByServerRelativeUrl('${encodeURIComponent(folderUrl)}')/Files/add(overwrite=true,url='${encodeURIComponent(fname)}')`;
-    const rr=await fetch(uploadUrl,{
-      method:'POST',
-      headers:{
-        'Authorization':`Bearer ${window._spRestToken}`,
-        'Accept':'application/json;odata=verbose',
-        'Content-Type':'application/octet-stream',
-        'X-RequestDigest':'0x0'
-      },
-      body:S.signedBytes
-    });
-    if(!rr.ok){
-      const errText=await rr.text();
-      throw new Error('Error al subir ('+rr.status+'): '+errText.substring(0,200));
+    const enc=encodeURIComponent(fname);
+    let uploadUrl;
+    if(currentFolderId==='root'){
+      uploadUrl=`https://graph.microsoft.com/v1.0/drives/${currentDriveId}/root:/${enc}:/content`;
+    }else{
+      uploadUrl=`https://graph.microsoft.com/v1.0/drives/${currentDriveId}/items/${currentFolderId}:/${enc}:/content`;
     }
+    const rr=await fetch(uploadUrl,{method:'PUT',headers:{Authorization:`Bearer ${spToken}`,'Content-Type':'application/octet-stream'},body:S.signedBytes});
+    if(!rr.ok){const err=await rr.json();throw new Error(err.error?.message||'Error '+rr.status)}
     const data=await rr.json();
-    const fileUrl=data?.d?.ServerRelativeUrl
-      ? `${CFG.spSiteUrl.split('/sites/')[0]}${data.d.ServerRelativeUrl}`
-      : '';
     res.style.display='block';
-    res.innerHTML='<div class="ib gr">✅ <strong>Subido a '+destLabel+'</strong>'+(fileUrl?'<br><a href="'+fileUrl+'" target="_blank" style="color:var(--green);font-size:12px;margin-top:3px;display:inline-block">📎 Ver en SharePoint →</a>':'')+'</div>';
+    res.innerHTML='<div class="ib gr">✅ <strong>Subido a '+destLabel+'</strong>'+(data.webUrl?'<br><a href="'+data.webUrl+'" target="_blank" style="color:var(--green);font-size:12px;margin-top:3px;display:inline-block">📎 Ver en SharePoint →</a>':'')+'</div>';
     addLog('✅ '+fname+' → '+destLabel);
   }catch(e){
     res.style.display='block';res.innerHTML='<div class="ib re">❌ '+e.message+'</div>';addLog('❌ '+e.message,'e');
