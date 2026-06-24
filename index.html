@@ -604,7 +604,11 @@ const CFG = {
 // ═══════════════════════════════════════════════════════════
 
 let msalApp = null;
-const SCOPES = ['User.Read','https://graph.microsoft.com/Sites.ReadWrite.All','https://graph.microsoft.com/Files.ReadWrite.All'];
+const SCOPES = [
+  'User.Read',
+  'https://alimesa.sharepoint.com/AllSites.Write',
+  'https://alimesa.sharepoint.com/AllSites.Read'
+];
 let spToken=null, siteId=null, drives={}, currentDriveId=null;
 let currentFolderPath='', currentFolderId='root';
 let S={ file:null, bytes:null, sigMode:'img', sigData:null, certFile:null, signedBytes:null, signedName:'' };
@@ -695,24 +699,68 @@ async function afterLogin(account){
     const sd=await sr.json();
     siteId=sd.id;
 
-    // ── CORRECCIÓN: obtener drives con permisos reales del usuario ──
-    // Primero obtenemos todas las drives del sitio
-    const dr=await fetch(`https://graph.microsoft.com/v1.0/sites/${siteId}/drives`,{headers:{Authorization:`Bearer ${spToken}`}});
-    if(!dr.ok)throw new Error('Sin acceso al sitio.');
-    const dd=await dr.json();
-    const allDrives=dd.value||[];
+    // ── Obtener token SharePoint REST (respeta permisos individuales) ──
+    // Usamos SharePoint REST API directamente — a diferencia de Graph,
+    // esta API sí filtra por los permisos reales del usuario en cada biblioteca
+    const spRestToken = await msalApp.acquireTokenSilent({
+      scopes: ['https://alimesa.sharepoint.com/AllSites.Write'],
+      account
+    });
+    const spRestT = spRestToken.accessToken;
 
-    // Luego filtramos probando acceso real a cada drive con el token del usuario
-    drives={};
-    await Promise.all(allDrives.map(async(d)=>{
-      try{
-        // Intentar leer el root de la drive — si el usuario no tiene permiso, dará 403/401
-        const tr=await fetch(`https://graph.microsoft.com/v1.0/drives/${d.id}/root`,{
-          headers:{Authorization:`Bearer ${spToken}`}
-        });
-        if(tr.ok) drives[d.name]=d.id;
-      }catch{/* sin acceso, ignorar */}
-    }));
+    // Obtener todas las listas de tipo DocumentLibrary del sitio
+    // Este endpoint devuelve SOLO las que el usuario puede leer
+    const listsUrl = CFG.spSiteUrl + "/_api/web/lists?$filter=BaseTemplate eq 101&$select=Title,Id,RootFolder/ServerRelativeUrl&$expand=RootFolder";
+    const lr = await fetch(listsUrl, {
+      headers: {
+        'Authorization': `Bearer ${spRestT}`,
+        'Accept': 'application/json;odata=verbose'
+      }
+    });
+
+    drives = {};
+    if(lr.ok){
+      const ld = await lr.json();
+      const lists = ld?.d?.results || [];
+      // Para cada biblioteca, verificar acceso real intentando listar su contenido
+      await Promise.all(lists.map(async(lib)=>{
+        try{
+          const checkUrl = CFG.spSiteUrl + `/_api/web/GetFolderByServerRelativeUrl('${encodeURIComponent(lib.RootFolder.ServerRelativeUrl)}')/Files?$top=1`;
+          const cr = await fetch(checkUrl, {
+            headers: {
+              'Authorization': `Bearer ${spRestT}`,
+              'Accept': 'application/json;odata=verbose'
+            }
+          });
+          if(cr.ok){
+            // También necesitamos el drive ID de Graph para subir archivos
+            // Lo obtenemos mapeando por nombre
+            drives[lib.Title] = { listId: lib.Id, rootUrl: lib.RootFolder.ServerRelativeUrl };
+          }
+        }catch{/* sin acceso */}
+      }));
+    }
+
+    // Si el método REST no funcionó, fallback a Graph con verificación individual
+    if(!Object.keys(drives).length){
+      const dr = await fetch(`https://graph.microsoft.com/v1.0/sites/${siteId}/drives`,{
+        headers:{Authorization:`Bearer ${spToken}`}
+      });
+      const dd = await dr.json();
+      await Promise.all((dd.value||[]).map(async(d)=>{
+        try{
+          // Usar endpoint /items en lugar de /root para forzar verificación de permisos
+          const tr = await fetch(
+            `https://graph.microsoft.com/v1.0/drives/${d.id}/root/children?$top=1&$select=id`,
+            {headers:{Authorization:`Bearer ${spToken}`}}
+          );
+          if(tr.ok) drives[d.name] = { driveId: d.id };
+        }catch{/* sin acceso */}
+      }));
+    }
+
+    // Guardar spRestToken para subidas
+    window._spRestToken = spRestT;
 
     if(!Object.keys(drives).length){showDenied(`Tu cuenta ${account.username} no tiene acceso a ninguna biblioteca en este sitio.`);return}
 
@@ -738,7 +786,7 @@ async function afterLogin(account){
     sel.innerHTML='<option value="">— Selecciona una biblioteca —</option>';
     Object.keys(drives).sort().forEach(name=>{
       const opt=document.createElement('option');
-      opt.value=drives[name];opt.textContent='📚 '+name;
+      opt.value=name; opt.textContent='📚 '+name;
       sel.appendChild(opt);
     });
     document.getElementById('libNoteT').textContent=
@@ -1102,9 +1150,20 @@ async function signPdfCert(bytes,n,r,ts){
 // ── PASO 5: SharePoint con navegador de carpetas ────────────
 async function onDriveChange(){
   const sel=document.getElementById('driveSelect');
-  currentDriveId=sel.value;
+  const driveName=sel.value;
+  if(!driveName){document.getElementById('folderBrowser').style.display='none';return}
+
+  // Resolver driveId si aún no lo tenemos
+  const driveInfo=drives[driveName];
+  if(!driveInfo.driveId){
+    // Buscar el driveId por nombre usando Graph
+    const dr=await fetch(`https://graph.microsoft.com/v1.0/sites/${siteId}/drives`,{headers:{Authorization:`Bearer ${spToken}`}});
+    const dd=await dr.json();
+    const found=(dd.value||[]).find(d=>d.name===driveName);
+    if(found) drives[driveName].driveId=found.id;
+  }
+  currentDriveId=drives[driveName].driveId;
   currentFolderPath='';currentFolderId='root';
-  if(!currentDriveId){document.getElementById('folderBrowser').style.display='none';return}
   document.getElementById('folderBrowser').style.display='block';
   await loadFolders('root','');
 }
