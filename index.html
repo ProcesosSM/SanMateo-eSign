@@ -599,32 +599,12 @@ const CFG = {
   clientId:  '804d6d3d-4109-48bf-84fd-eb26d4508947',
   tenantId:  'b8235890-1a0b-4f78-87aa-6631aeef75a8',
   spSiteUrl: 'https://alimesa.sharepoint.com/sites/SistemaDocumental-AlimentosSanMateo',
-  redirectUri: 'https://procesossm.github.io/SanMateo-eSign/',
-  // ── BIBLIOTECAS ────────────────────────────────────────────────────────────
-  // Con solo Files.ReadWrite.All no existe endpoint en Graph que liste las
-  // drives de un sitio. La solución es configurar aquí los Drive IDs de cada
-  // biblioteca. El sistema prueba acceso a cada una con el token del usuario:
-  // si el usuario no tiene permiso, Graph devuelve 403 y no se muestra.
-  //
-  // Cómo obtener el Drive ID de una biblioteca:
-  //   GET https://graph.microsoft.com/v1.0/sites/{siteId}/drives
-  //   (con un token de admin o desde Graph Explorer)
-  //   Copiar el campo "id" de cada biblioteca.
-  // ──────────────────────────────────────────────────────────────────────────
-  drives: [
-    // { name: 'Contabilidad',            id: 'b!xxxx...AAAA' },
-    // { name: 'Compras',                 id: 'b!xxxx...BBBB' },
-    // { name: 'Recursos Humanos',        id: 'b!xxxx...CCCC' },
-    // { name: 'Operaciones',             id: 'b!xxxx...DDDD' },
-    // { name: 'Comercial',               id: 'b!xxxx...EEEE' },
-    // { name: 'Créditos y Cobranzas',    id: 'b!xxxx...FFFF' },
-    // Descomenta y completa con los IDs reales de tu sitio
-  ]
+  redirectUri: 'https://procesossm.github.io/SanMateo-eSign/'
 };
 // ═══════════════════════════════════════════════════════════
 
 let msalApp = null;
-const SCOPES = ['User.Read','Files.ReadWrite.All'];
+const SCOPES = ['User.Read','Files.ReadWrite.All','Sites.Read.All'];
 let spToken=null, siteId=null, drives={}, currentDriveId=null;
 let currentFolderPath='', currentFolderId='root';
 let S={ file:null, bytes:null, sigMode:'img', sigData:null, certFile:null, signedBytes:null, signedName:'' };
@@ -708,25 +688,41 @@ async function afterLogin(account){
     const t=await msalApp.acquireTokenSilent({scopes:SCOPES,account});
     spToken=t.accessToken;
 
-    // ── Con Files.ReadWrite.All no existe endpoint para listar drives de un sitio.
-    // Los Drive IDs están en CFG.drives. Probamos acceso a cada uno con el token
-    // del usuario: 200 → se muestra; 403/error → se oculta silenciosamente.
-    if(!CFG.drives||!CFG.drives.length){
-      showDenied('No hay bibliotecas configuradas. Completa CFG.drives en el código.');return;
-    }
+    // ── Obtener site ID (requiere Sites.Read.All) ──────────────────────────────
+    const hp=CFG.spSiteUrl.replace('https://','').split('/');
+    const sr=await fetch(
+      `https://graph.microsoft.com/v1.0/sites/${hp[0]}:/${hp.slice(1).join('/')}?$select=id`,
+      {headers:{Authorization:`Bearer ${spToken}`}}
+    );
+    if(!sr.ok)throw new Error('No se pudo acceder al sitio de SharePoint.');
+    const sd=await sr.json();
+    siteId=sd.id;
+
+    // ── Listar todas las drives del sitio (Sites.Read.All) y filtrar por acceso real ──
+    // Sites.Read.All permite listar la estructura del sitio pero NO acceder al contenido.
+    // Para cada drive, probamos GET /root con el token delegado del usuario:
+    // SharePoint devuelve 403 si el usuario no tiene permisos asignados en esa biblioteca.
+    const sdr=await fetch(
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/drives?$select=id,name`,
+      {headers:{Authorization:`Bearer ${spToken}`}}
+    );
+    if(!sdr.ok)throw new Error('No se pudieron listar las bibliotecas.');
+    const allDrives=(await sdr.json()).value||[];
+
     drives={};
-    await Promise.all(CFG.drives.map(async(d)=>{
+    await Promise.all(allDrives.map(async(d)=>{
       try{
+        // Sin Sites.ReadWrite.All, este GET respeta los permisos reales del usuario en SharePoint
         const tr=await fetch(
           `https://graph.microsoft.com/v1.0/drives/${d.id}/root?$select=id`,
           {headers:{Authorization:`Bearer ${spToken}`}}
         );
         if(tr.ok) drives[d.name]=d.id;
-        // 403 → usuario sin acceso a esta biblioteca → no se agrega
+        // 403 → sin permiso en esta biblioteca → no se muestra
       }catch{/* error de red, ignorar */}
     }));
 
-    if(!Object.keys(drives).length){showDenied(`Tu cuenta ${account.username} no tiene acceso a ninguna de las bibliotecas configuradas.`);return}
+    if(!Object.keys(drives).length){showDenied(`Tu cuenta ${account.username} no tiene acceso a ninguna biblioteca en este sitio.`);return}
 
     // ── Sesión compartida entre pestañas via localStorage ──
     localStorage.setItem('sm_esign_account', JSON.stringify({
